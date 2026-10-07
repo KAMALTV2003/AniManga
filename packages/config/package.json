@@ -1,0 +1,30 @@
+{
+  "name": "@nexus-ai/config",
+  "version": "0.1.0-dev.1",
+  "description": "Validated layered configuration for NEXUS AI",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "@nexus-ai/core": "0.1.0-dev.1",
+    "dotenv": "17.2.3",
+    "yaml": "2.9.1",
+    "zod": "4.6.5"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  }
+}

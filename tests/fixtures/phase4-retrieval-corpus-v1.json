@@ -1,0 +1,82 @@
+{
+  "name": "nexus-phase4-retrieval-foundation",
+  "version": 1,
+  "license": "CC0-1.0",
+  "description": "Synthetic deterministic corpus for software capability selection. It is not an external or model-quality benchmark.",
+  "capabilities": [
+    {
+      "name": "release-notes",
+      "description": "Prepare concise changelogs and release summaries from verified changes.",
+      "tags": ["documentation", "release"],
+      "behaviors": ["release-notes", "changelog"]
+    },
+    {
+      "name": "security-review",
+      "description": "Inspect source changes for vulnerabilities, unsafe flows, and policy violations.",
+      "tags": ["security", "review"],
+      "behaviors": ["security-review", "threat-analysis"]
+    },
+    {
+      "name": "incident-response",
+      "description": "Triage service failures and prepare bounded incident recovery actions.",
+      "tags": ["operations", "incident"],
+      "behaviors": ["incident-triage", "recovery-plan"]
+    },
+    {
+      "name": "api-documentation",
+      "description": "Document typed HTTP interfaces, request schemas, and response contracts.",
+      "tags": ["documentation", "api"],
+      "behaviors": ["api-documentation", "schema-documentation"]
+    },
+    {
+      "name": "dependency-audit",
+      "description": "Review dependency manifests, provenance, licenses, and vulnerability evidence.",
+      "tags": ["security", "dependencies"],
+      "behaviors": ["dependency-audit", "license-review"]
+    },
+    {
+      "name": "test-planning",
+      "description": "Design deterministic normal, boundary, failure, and regression test cases.",
+      "tags": ["testing", "quality"],
+      "behaviors": ["test-planning", "regression-design"]
+    }
+  ],
+  "cases": [
+    {
+      "id": "release-summary",
+      "query": "summarize verified changes for a new version",
+      "preferredTags": ["release"],
+      "expected": "release-notes"
+    },
+    {
+      "id": "source-risk",
+      "query": "find unsafe flows and policy violations in this change",
+      "preferredTags": ["security", "review"],
+      "expected": "security-review"
+    },
+    {
+      "id": "production-failure",
+      "query": "triage a service failure and plan recovery",
+      "preferredTags": ["incident"],
+      "expected": "incident-response"
+    },
+    {
+      "id": "http-contract",
+      "query": "describe request and response schemas for an HTTP interface",
+      "preferredTags": ["api"],
+      "expected": "api-documentation"
+    },
+    {
+      "id": "package-risk",
+      "query": "inspect package provenance licenses and advisories",
+      "preferredTags": ["dependencies", "security"],
+      "expected": "dependency-audit"
+    },
+    {
+      "id": "regression-suite",
+      "query": "design boundary failure and regression cases",
+      "preferredTags": ["testing"],
+      "expected": "test-planning"
+    }
+  ]
+}

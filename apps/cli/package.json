@@ -1,0 +1,30 @@
+{
+  "name": "@nexus-ai/cli",
+  "version": "0.1.0-dev.1",
+  "description": "Command-line interface for NEXUS AI",
+  "type": "module",
+  "bin": {
+    "nexus": "./dist/main.js"
+  },
+  "main": "./dist/main.js",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "@nexus-ai/capabilities": "0.1.0-dev.1",
+    "@nexus-ai/config": "0.1.0-dev.1",
+    "@nexus-ai/core": "0.1.0-dev.1",
+    "@nexus-ai/database": "0.1.0-dev.1",
+    "@nexus-ai/harvest": "0.1.0-dev.1",
+    "@nexus-ai/observability": "0.1.0-dev.1",
+    "@nexus-ai/skills": "0.1.0-dev.1",
+    "commander": "15.0.0"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b --pretty false"
+  }
+}

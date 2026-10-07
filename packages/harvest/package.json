@@ -1,0 +1,33 @@
+{
+  "name": "@nexus-ai/harvest",
+  "version": "0.1.0-dev.1",
+  "description": "Isolated source acquisition, license review, static scanning, scoring, deduplication, and quarantine for NEXUS AI",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean && rm -rf dist",
+    "typecheck": "tsc -b --pretty false"
+  },
+  "dependencies": {
+    "@nexus-ai/core": "0.1.0-dev.1",
+    "@nexus-ai/database": "0.1.0-dev.1",
+    "@nexus-ai/skills": "0.1.0-dev.1",
+    "ipaddr.js": "2.5.0",
+    "spdx-expression-parse": "5.0.0"
+  }
+}

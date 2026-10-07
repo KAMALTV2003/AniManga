@@ -1,0 +1,20 @@
+version: 1
+environment: development
+project:
+  id: prj_4f860f227273c3e85306347119a0cd95
+  name: NEXUS AI
+runtime:
+  dataDir: .nexus
+  shutdownTimeoutMs: 10000
+database:
+  provider: sqlite
+  path: .nexus/nexus.db
+  busyTimeoutMs: 5000
+logging:
+  level: info
+  format: pretty
+  destination: stdout
+  captureContent: false
+  extraRedactKeys: []
+security:
+  failClosed: true
