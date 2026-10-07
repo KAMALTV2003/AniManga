@@ -30,7 +30,7 @@ describe('nexus CLI', () => {
     expect(initialized.status).toBe(0);
     expect(JSON.parse(initialized.stdout)).toMatchObject({
       status: 'initialized',
-      schemaVersion: 7,
+      schemaVersion: 8,
     });
 
     const doctor = run(root, 'doctor');
@@ -46,14 +46,14 @@ describe('nexus CLI', () => {
 
     const validation = run(root, 'validate');
     expect(validation.status).toBe(0);
-    expect(JSON.parse(validation.stdout)).toMatchObject({ valid: true, schemaVersion: 7 });
+    expect(JSON.parse(validation.stdout)).toMatchObject({ valid: true, schemaVersion: 8 });
 
     const migration = run(root, 'migrate');
     expect(migration.status).toBe(0);
     expect(JSON.parse(migration.stdout)).toMatchObject({
       migrated: false,
-      fromVersion: 7,
-      toVersion: 7,
+      fromVersion: 8,
+      toVersion: 8,
       health: 'healthy',
     });
   });
@@ -111,7 +111,12 @@ describe('nexus CLI', () => {
     ]);
     const graphSync = run(root, 'capability', 'sync');
     expect(graphSync.status).toBe(0);
-    expect(JSON.parse(graphSync.stdout)).toMatchObject({ indexedSkills: 1, dependencyEdges: 0 });
+    const graphReport = JSON.parse(graphSync.stdout) as {
+      projectId: string;
+      indexedSkills: number;
+      dependencyEdges: number;
+    };
+    expect(graphReport).toMatchObject({ indexedSkills: 1, dependencyEdges: 0 });
     const capabilitySearch = run(root, 'capability', 'search', 'publishing a release');
     expect(capabilitySearch.status).toBe(0);
     expect(JSON.parse(capabilitySearch.stdout)).toMatchObject({
@@ -154,6 +159,132 @@ describe('nexus CLI', () => {
       status: 'passed',
       baseline: { recallAtK: 0 },
       candidate: { recallAtK: 1 },
+    });
+
+    const agentPath = join(root, 'release-agent.json');
+    writeFileSync(
+      agentPath,
+      JSON.stringify({
+        projectId: graphReport.projectId,
+        name: 'release-coordinator',
+        description: 'Coordinate a bounded release workflow.',
+        version: '1.0.0',
+        role: 'Coordinate reviewed release evidence.',
+        capabilities: ['release-coordination'],
+        tools: [],
+        constraints: {
+          maxSteps: 8,
+          maxRetries: 1,
+          maxContextBytes: 100000,
+          maxCostMicrounits: 1000000,
+          timeoutMs: 60000,
+        },
+        escalationPolicy: {
+          onBlocked: 'manual',
+          onBudgetExceeded: 'fail',
+          onRepeatedFailure: 'manual',
+        },
+        evaluationCriteria: ['Required release evidence is cited.'],
+        modelPolicy: {
+          requiredCapabilities: ['text'],
+          allowedProviders: [],
+          allowedModelIds: [],
+          allowUnmeasured: false,
+        },
+        contextPolicy: {
+          maxInputTokens: 10000,
+          includeSkillInstructions: false,
+          includeMemory: false,
+        },
+      }),
+    );
+    const agentRegistration = run(root, 'agent', 'register', agentPath);
+    expect(agentRegistration.status).toBe(0);
+    const registeredAgent = JSON.parse(agentRegistration.stdout) as {
+      agentId: string;
+      versionId: string;
+    };
+    const agentActivation = run(
+      root,
+      'agent',
+      'activate',
+      registeredAgent.agentId,
+      '--version',
+      '1.0.0',
+      '--actor',
+      'cli-test-operator',
+      '--reason',
+      'Exercise exact local activation.',
+      '--acknowledge-local-operator',
+    );
+    expect(agentActivation.status).toBe(0);
+    expect(JSON.parse(agentActivation.stdout)).toMatchObject({
+      action: 'activate',
+      resultingVersionId: registeredAgent.versionId,
+    });
+
+    const modelRegistration = run(
+      root,
+      'model',
+      'register',
+      '--provider',
+      'fixture-provider',
+      '--model',
+      'fixture-v1',
+      '--display-name',
+      'Fixture V1',
+      '--capability',
+      'text',
+      'structured_output',
+      '--context-window',
+      '32000',
+      '--status',
+      'disabled',
+    );
+    expect(modelRegistration.status).toBe(0);
+    const registeredModel = JSON.parse(modelRegistration.stdout) as { id: string };
+    const modelStatus = run(root, 'model', 'status', registeredModel.id, '--status', 'available');
+    expect(modelStatus.status).toBe(0);
+    expect(JSON.parse(modelStatus.stdout)).toMatchObject({
+      id: registeredModel.id,
+      status: 'available',
+    });
+    const modelMetric = run(
+      root,
+      'model',
+      'record-metric',
+      registeredModel.id,
+      '--task-type',
+      'release',
+      '--outcome',
+      'success',
+      '--latency-ms',
+      '120',
+      '--input-tokens',
+      '100',
+      '--output-tokens',
+      '20',
+      '--cost-microunits',
+      '500000',
+      '--evaluation-score',
+      '0.9',
+    );
+    expect(modelMetric.status).toBe(0);
+    const modelRoute = run(
+      root,
+      'model',
+      'route',
+      'release',
+      '--require',
+      'text',
+      'structured_output',
+      '--min-success-rate',
+      '0.8',
+    );
+    expect(modelRoute.status).toBe(0);
+    expect(JSON.parse(modelRoute.stdout)).toMatchObject({
+      status: 'selected',
+      selectedModelId: registeredModel.id,
     });
 
     const verification = run(root, 'skill', 'verify', installed.skillId);

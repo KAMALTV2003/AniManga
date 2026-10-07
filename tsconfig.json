@@ -8,6 +8,7 @@
     { "path": "packages/skills" },
     { "path": "packages/harvest" },
     { "path": "packages/capabilities" },
+    { "path": "packages/agents" },
     { "path": "apps/cli" }
   ]
 }

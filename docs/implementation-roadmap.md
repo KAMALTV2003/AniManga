@@ -75,6 +75,8 @@ Exit evidence is recorded in [PROJECT-STATUS.md](PROJECT-STATUS.md).
 
 ## Phase 5 — Agent runtime and model gateway
 
+**Status: in progress.** The first verified foundation implements strict immutable agent definitions, acknowledged local activation, normalized model metadata, append-only measured metrics, explainable policy-aware routing, a bounded complete-response provider port, timeout/cancellation, and provider conformance contracts. No external adapter, model-quality result, planner/executor, orchestration pattern, or durable workflow claim exists yet.
+
 - canonical agent schema and registry;
 - normalized model provider interface;
 - Anthropic, OpenAI, Google, and local adapter tests where credentials/endpoints are available;

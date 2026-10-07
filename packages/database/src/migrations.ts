@@ -850,4 +850,92 @@ BEFORE DELETE ON capability_promotion_decisions BEGIN
 END;
 `,
   ),
+  migration(
+    8,
+    'agent_model_gateway_foundation',
+    `
+CREATE TABLE agent_version_integrity (
+  agent_version_id TEXT PRIMARY KEY REFERENCES agent_versions(id) ON DELETE RESTRICT,
+  schema_version INTEGER NOT NULL CHECK(schema_version = 1),
+  definition_sha256 TEXT NOT NULL CHECK(length(definition_sha256) = 64),
+  definition_json TEXT NOT NULL CHECK(json_valid(definition_json)),
+  created_at TEXT NOT NULL
+) STRICT;
+
+CREATE TABLE agent_lifecycle_decisions (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE RESTRICT,
+  agent_id TEXT NOT NULL REFERENCES agents(id) ON DELETE RESTRICT,
+  agent_version_id TEXT NOT NULL REFERENCES agent_versions(id) ON DELETE RESTRICT,
+  action TEXT NOT NULL CHECK(action IN ('activate','deprecate','block')),
+  actor TEXT NOT NULL CHECK(length(actor) BETWEEN 1 AND 256),
+  reason TEXT NOT NULL CHECK(length(reason) BETWEEN 1 AND 2048),
+  previous_status TEXT NOT NULL CHECK(previous_status IN ('candidate','active','deprecated','archived','blocked')),
+  resulting_status TEXT NOT NULL CHECK(resulting_status IN ('candidate','active','deprecated','archived','blocked')),
+  previous_version_id TEXT REFERENCES agent_versions(id) ON DELETE RESTRICT,
+  resulting_version_id TEXT REFERENCES agent_versions(id) ON DELETE RESTRICT,
+  created_at TEXT NOT NULL
+) STRICT;
+CREATE INDEX agent_lifecycle_decisions_agent_idx
+  ON agent_lifecycle_decisions(project_id, agent_id, created_at DESC);
+
+CREATE TABLE model_routing_decisions (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE RESTRICT,
+  task_type TEXT NOT NULL CHECK(length(task_type) BETWEEN 1 AND 128),
+  policy_version TEXT NOT NULL CHECK(length(policy_version) BETWEEN 1 AND 192),
+  status TEXT NOT NULL CHECK(status IN ('selected','no_match')),
+  selected_model_id TEXT REFERENCES models(id) ON DELETE RESTRICT,
+  constraints_json TEXT NOT NULL CHECK(json_valid(constraints_json)),
+  candidates_json TEXT NOT NULL CHECK(json_valid(candidates_json)),
+  reason_code TEXT NOT NULL CHECK(length(reason_code) BETWEEN 1 AND 128),
+  created_at TEXT NOT NULL,
+  CHECK((status = 'selected' AND selected_model_id IS NOT NULL) OR
+        (status = 'no_match' AND selected_model_id IS NULL))
+) STRICT;
+CREATE INDEX model_routing_decisions_project_idx
+  ON model_routing_decisions(project_id, task_type, created_at DESC);
+
+CREATE TRIGGER agent_versions_reject_update
+BEFORE UPDATE ON agent_versions BEGIN
+  SELECT RAISE(ABORT, 'agent versions are immutable');
+END;
+CREATE TRIGGER agent_versions_reject_delete
+BEFORE DELETE ON agent_versions BEGIN
+  SELECT RAISE(ABORT, 'agent versions are immutable');
+END;
+CREATE TRIGGER agent_version_integrity_reject_update
+BEFORE UPDATE ON agent_version_integrity BEGIN
+  SELECT RAISE(ABORT, 'agent version integrity evidence is append-only');
+END;
+CREATE TRIGGER agent_version_integrity_reject_delete
+BEFORE DELETE ON agent_version_integrity BEGIN
+  SELECT RAISE(ABORT, 'agent version integrity evidence is append-only');
+END;
+CREATE TRIGGER agent_lifecycle_decisions_reject_update
+BEFORE UPDATE ON agent_lifecycle_decisions BEGIN
+  SELECT RAISE(ABORT, 'agent lifecycle decisions are append-only');
+END;
+CREATE TRIGGER agent_lifecycle_decisions_reject_delete
+BEFORE DELETE ON agent_lifecycle_decisions BEGIN
+  SELECT RAISE(ABORT, 'agent lifecycle decisions are append-only');
+END;
+CREATE TRIGGER model_metric_samples_reject_update
+BEFORE UPDATE ON model_metric_samples BEGIN
+  SELECT RAISE(ABORT, 'model metric samples are append-only');
+END;
+CREATE TRIGGER model_metric_samples_reject_delete
+BEFORE DELETE ON model_metric_samples BEGIN
+  SELECT RAISE(ABORT, 'model metric samples are append-only');
+END;
+CREATE TRIGGER model_routing_decisions_reject_update
+BEFORE UPDATE ON model_routing_decisions BEGIN
+  SELECT RAISE(ABORT, 'model routing decisions are append-only');
+END;
+CREATE TRIGGER model_routing_decisions_reject_delete
+BEFORE DELETE ON model_routing_decisions BEGIN
+  SELECT RAISE(ABORT, 'model routing decisions are append-only');
+END;
+`,
+  ),
 ]);

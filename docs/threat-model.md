@@ -101,6 +101,14 @@
 
 **Controls:** provider/model identity; exact count/dimension/finite-value/non-zero-norm validation; stale-vector rejection; document/vector-value/query/candidate/graph/state/context limits; explicit bounded-search labels; measured scalable-backend conformance before replacement.
 
+### Model routing evidence poisoning and provider confusion
+
+**Path:** fabricated metrics bias routing, an unavailable model is selected, a provider returns a response for another request/model, or missing measurements are presented as quality evidence.
+
+**Controls:** append-only attributed metrics; authenticated telemetry in team deployments; explicit availability/capability/context constraints; fail-closed measured-evidence default; disclosed unmeasured priors; complete candidate/rejection evidence; policy fingerprints; request/provider/model identity matching; bounded usage/cost fields; no routing authority to invoke or spend.
+
+**Phase 5 foundation:** local metrics remain unauthenticated operator assertions. Routing stores no raw task, prompt, or output and cannot invoke a model. The complete-response gateway rejects identity mismatch and bounds timeout/cancellation, but no external adapter or provider-quality claim exists.
+
 ### Insecure inter-agent communication
 
 **Path:** spoofed, replayed, or cross-tenant task/result messages influence another agent.
@@ -143,11 +151,11 @@ Always blocked or approval-gated according to policy:
 
 ## 7. Implemented controls and gaps
 
-Implemented through Phase 4: strict data-only config; symlink/size/unknown-key rejection; unsafe merge-key rejection; secret redaction; migration checksums and backup-aware upgrades; database integrity; local file modes; append-only event triggers; strict Agent Skills parsing; bounded directory, ZIP, HTTPS ZIP, and bare-Git adapters; public-address and destination-pinning controls; portable path-collision rejection; deterministic payload/file/source hashes; immutable Skill versions; provenance; static security/license/duplicate assessments; quarantine; inactive candidate registration; installed-artifact re-verification; project-scoped active capability indexing; validated bounded embedding storage and provider conformance harness; evidence-backed hybrid retrieval; dependency/conflict-aware bounded composition; query/intent hashing; inert gap proposals; append-only retrieval regression evidence; fail-closed local promotion gates; and exact state-matched rollback.
+Implemented through the Phase 5 foundation: strict data-only config; symlink/size/unknown-key rejection; unsafe merge-key rejection; secret redaction; migration checksums and backup-aware upgrades; database integrity; local file modes; append-only event triggers; strict Agent Skills parsing; bounded directory, ZIP, HTTPS ZIP, and bare-Git adapters; public-address and destination-pinning controls; portable path-collision rejection; deterministic payload/file/source hashes; immutable Skill and agent versions; provenance; static security/license/duplicate assessments; quarantine; inactive candidate registration; installed-artifact re-verification; project-scoped active capability indexing; validated bounded embedding storage and provider conformance harness; evidence-backed hybrid retrieval; dependency/conflict-aware bounded composition; query/intent hashing; inert gap proposals; append-only retrieval regression evidence; fail-closed local promotion gates; exact state-matched rollback; strict agent registration and exact local activation; append-only model metrics; explainable fail-closed model routing; and bounded provider response normalization.
 
 ZIP parsing and scanning still run in the CLI process, and local source trees can be exposed to concurrent mutation by another local process. Snapshotting, no-follow opens, inode/size/containment checks, post-copy hashes, process limits, and sampled Git staging limits reduce risk, but process, mount, syscall, and kernel-enforced storage isolation are required before hostile multi-user operation.
 
-Not implemented: authenticated identity, authorization, production approval service, execution sandbox, runtime network policy, specialized malware/dependency advisory engines, DLP certification, tenant isolation, signatures, SBOM, or durable external audit. Local candidate promotion requires explicit acknowledgement but is not authenticated approval. These are explicit blockers, not accepted residual production risks.
+Not implemented: authenticated identity, authorization, production approval service, external model adapters, agent planner/executor, durable orchestration, execution sandbox, runtime network policy, specialized malware/dependency advisory engines, DLP certification, tenant isolation, signatures, SBOM, or durable external audit. Local candidate promotion requires explicit acknowledgement but is not authenticated approval. These are explicit blockers, not accepted residual production risks.
 
 ## 8. Verification plan
 

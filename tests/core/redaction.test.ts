@@ -20,9 +20,14 @@ describe('redaction', () => {
     expect(source.auth.authorization).toBe('Bearer abc');
   });
 
-  it('redacts bearer credentials and assignment forms in text', () => {
+  it('redacts bearer credentials, assignment forms, and known token shapes in text', () => {
     expect(redactText('Authorization: Bearer abc.def token=xyz')).toBe(
       'Authorization: Bearer [REDACTED] token=[REDACTED]',
+    );
+    const providerToken = `sk-${'a'.repeat(24)}`;
+    const githubToken = `ghp_${'b'.repeat(24)}`;
+    expect(redactText(`provider=${providerToken} source=${githubToken}`)).toBe(
+      'provider=[REDACTED] source=[REDACTED]',
     );
   });
 });

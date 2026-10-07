@@ -1,7 +1,3 @@
-import { constants as fsConstants } from 'node:fs';
-import { open } from 'node:fs/promises';
-import path from 'node:path';
-
 import {
   CapabilityComposer,
   CapabilityGraph,
@@ -16,6 +12,8 @@ import {
 } from '@nexus-ai/capabilities';
 import { loadNexusConfig } from '@nexus-ai/config';
 import { SqliteDatabase } from '@nexus-ai/database';
+
+import { readBoundedJsonFile } from './files.js';
 
 export async function syncCapabilities(startDir: string) {
   return withDatabase(startDir, (database, projectId) =>
@@ -96,36 +94,7 @@ export async function proposeCapability(
 }
 
 export async function evaluateRetrieval(startDir: string, suitePath: string) {
-  const absolute = path.resolve(startDir, suitePath);
-  const handle = await open(absolute, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
-  let bytes: Buffer;
-  try {
-    const maximumBytes = 1_000_000;
-    const before = await handle.stat();
-    if (!before.isFile() || before.size > maximumBytes) {
-      throw new RangeError(
-        'Evaluation suite must be a real JSON file no larger than 1000000 bytes',
-      );
-    }
-    const bounded = Buffer.allocUnsafe(maximumBytes + 1);
-    const { bytesRead } = await handle.read(bounded, 0, bounded.byteLength, 0);
-    const after = await handle.stat();
-    if (bytesRead > maximumBytes) {
-      throw new RangeError('Evaluation suite exceeded the 1000000-byte read limit');
-    }
-    if (before.size !== after.size || bytesRead !== before.size) {
-      throw new Error('Evaluation suite changed while being read');
-    }
-    bytes = bounded.subarray(0, bytesRead);
-  } finally {
-    await handle.close();
-  }
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(bytes.toString('utf8')) as unknown;
-  } catch (error) {
-    throw new SyntaxError(`Evaluation suite is not valid JSON: ${String(error)}`, { cause: error });
-  }
+  const parsed = await readBoundedJsonFile(startDir, suitePath, 'Evaluation suite');
   const suite: RetrievalEvaluationSuite = parseRetrievalEvaluationSuite(parsed);
   return withDatabase(startDir, async (database, projectId) => {
     new CapabilityGraph(database).syncActiveSkills(projectId);

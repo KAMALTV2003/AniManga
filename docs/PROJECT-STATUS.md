@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-07
 **Version:** `0.1.0-dev.1`
-**Overall state:** Phases 1–4 implemented and verified within documented local/inert boundaries
+**Overall state:** Phases 1–4 complete; Phase 5 agent/model foundation in progress
 **Production-ready:** No
 
 ## Completed
@@ -55,6 +55,20 @@
 
 External semantic-provider calibration, authenticated production approval, adversarial real-world corpora, and scalable ANN conformance remain explicitly unclaimed.
 
+### Phase 5 agent/model foundation — in progress
+
+- [x] Strict canonical agent definitions with bounded constraints, escalation, evaluation, model, and context policy.
+- [x] Immutable agent versions, canonical hashes, strict JSON parsing, candidate registration, and exact acknowledged local activation.
+- [x] Schema-v8 append-only agent integrity/lifecycle evidence, model metrics, and routing decisions while preserving schema-v3 data.
+- [x] Normalized model identities, declared capabilities, context windows, availability states, and conflict-safe registration.
+- [x] Append-only model outcome samples with task classification, success, latency, usage, cost, tool errors, and optional evaluation score.
+- [x] Explainable bounded routing with hard constraints, measured-evidence defaults, explicit unmeasured priors, policy fingerprints, component scores, and deterministic ties.
+- [x] Provider-neutral complete-response request/response contract with payload bounds, usage accounting, normalized stop reasons, timeout, cancellation, and identity validation.
+- [x] Model-provider conformance harness exercised only with a deterministic test provider.
+- [x] CLI agent register/list/activate and model register/list/record-metric/route lifecycle with JSON output.
+- [ ] External Anthropic, OpenAI, Google, and local adapters and explicitly configured conformance runs.
+- [ ] Bounded planner/executor loop, provider fallback/retry/budget control, orchestration patterns, and durable workflow implementation.
+
 ## Blocked or deliberately not claimed
 
 | Capability                             | State                             | Reason/gate                                                                                         |
@@ -65,8 +79,8 @@ External semantic-provider calibration, authenticated production approval, adver
 | Candidate promotion                    | Local evidence-gated mode only    | actor is unauthenticated; production authorization, approval, signatures, and external audit remain |
 | Execute Skills/tools                   | Blocked                           | sandbox, policy engine, approvals, and deny-by-default runtime egress are required                  |
 | Behavioral Skill quality/security      | Not claimed                       | static scores do not measure task success or safe runtime behavior                                  |
-| Model inference/routing                | Not implemented                   | provider contracts and credential-safe integration tests required                                   |
-| Multi-agent orchestration              | Not implemented                   | durable execution and agent runtime required                                                        |
+| Model inference/routing                | Routing foundation only           | no external adapter, credentials, invocation evidence, or provider quality result exists            |
+| Multi-agent orchestration              | Not implemented                   | planner/executor, fallback, budget controller, and durable execution are required                   |
 | Semantic search/composition            | Local hybrid path implemented     | external semantic-provider quality and scalable ANN backend remain unverified                       |
 | Memory learning/promotion              | Not implemented                   | trust lifecycle and poisoning tests required                                                        |
 | MCP connectivity                       | Blocked                           | protocol validation, permission, secret, and health gateway required                                |
@@ -79,21 +93,22 @@ External semantic-provider calibration, authenticated production approval, adver
 Latest confirmed local verification on Linux x64 and Node `v22.22.3`:
 
 - `npm run verify`: passed end to end.
-- Tests: **79 passed, 0 failed** across **17 files**.
-- Package coverage: **83.71% lines, 81.89% statements, 87.76% functions, 70.17% branches**.
+- Tests: **87 passed, 0 failed** across **18 files**.
+- Package coverage: **83.13% lines, 81.11% statements, 88.81% functions, 70.26% branches**.
+- `@nexus-ai/agents` coverage: **79.57% lines, 76.29% statements, 94.68% functions, 70.68% branches**.
 - `@nexus-ai/capabilities` coverage: **89.72% lines, 86.98% statements, 95.50% functions, 73.98% branches**.
 - `@nexus-ai/harvest` coverage: **73.21% lines, 71.12% statements, 74.12% functions, 58.75% branches**; remote network failure/success paths remain a priority for isolated integration coverage.
 - `@nexus-ai/skills` coverage: **86.92% lines, 85.92% statements, 92.38% functions, 77.11% branches**.
-- Real-process CLI E2E exercised initialization, schema v7, validation/migration, inert Skill analysis/test/harvest/install/search/verify, capability sync/search/composition/evaluation, secret redaction, and a script fixture that remained unexecuted.
+- Real-process CLI E2E exercised initialization, schema v8, validation/migration, inert Skill analysis/test/harvest/install/search/verify, capability sync/search/composition/evaluation, agent register/activate, model register/metrics/route, secret redaction, and a script fixture that remained unexecuted.
 - Formatting, typed ESLint, source-placeholder rejection, TypeScript project references, coverage thresholds, and `npm audit --audit-level=high`: passed.
 - Dependency advisory result: **0 known vulnerabilities**.
 - Installed direct dependencies for Phase 3 are exact-pinned: `ipaddr.js@2.5.0`, `spdx-expression-parse@5.0.0`, and `@types/spdx-expression-parse@4.0.0`.
 - Registry-signature verification is not claimed: the last `npm audit signatures` retry failed while fetching the Sigstore TUF root with `ECONNRESET`.
-- Database regression starts from a real schema-v3 database, applies migrations v4–v7, preserves existing Skill and capability-node records, and separately verifies online backup integrity with SQLite `quick_check`.
+- Database regression starts from a real schema-v3 database, applies migrations v4–v8, preserves existing Skill and capability-node records, and separately verifies online backup integrity with SQLite `quick_check`.
 
 ## Security review
 
-Detailed reviews are [security-review-phase3.md](security-review-phase3.md) and [security-review-phase4-foundation.md](security-review-phase4-foundation.md). Important remaining boundaries are:
+Detailed reviews are [security-review-phase3.md](security-review-phase3.md), [security-review-phase4-foundation.md](security-review-phase4-foundation.md), and [security-review-phase5-foundation.md](security-review-phase5-foundation.md). Important remaining boundaries are:
 
 - ZIP parsing and static analysis still run in the CLI process; a disposable non-root worker is required for hostile production use.
 - Git staging growth is sampled and checked after clone; a quota-limited filesystem/cgroup is required for a hard storage boundary.
@@ -105,7 +120,9 @@ Detailed reviews are [security-review-phase3.md](security-review-phase3.md) and 
 - The local exact-cosine backend is bounded and tested with a deterministic test provider; no production embedding provider, ANN backend, provider timeout/budget, or credential-isolation claim exists.
 - Retrieval and composition are project-scoped selection evidence and cannot authorize promotion; the separate local promotion gate is evidence-backed but actor identity is not authenticated.
 - Retrieval corpus v2 is synthetic; external semantic providers and adversarial real-world corpora remain unmeasured.
-- Imported execution remains prohibited.
+- Agent activation and model metrics are local operator assertions, not authenticated approvals or signed telemetry.
+- The model gateway has no external provider adapters, credential path, streaming contract, retry policy, or provider-quality evidence.
+- Routing does not invoke a model or authorize cost/data transmission; imported execution remains prohibited.
 
 ## Performance
 
@@ -146,4 +163,4 @@ These are reproducible local regression results, not product SLOs or general sem
 
 ## Next milestone
 
-Phase 5: canonical agent registry, normalized model-provider gateway, measured policy-aware routing, bounded planner/executor state machine, durable execution decision, and reproducible orchestration. Imported tools and Skills remain non-executable until the policy/approval/sandbox gates are implemented.
+Continue Phase 5 with recorded-fixture provider adapters, explicit endpoint/credential isolation, normalized error and streaming events, a bounded planner/executor state machine, budget reservation, retry/fallback semantics, and the first replay-tested Temporal workflow/activity implementation. Imported tools and Skills remain non-executable until the Phase 7 policy/approval/sandbox gates are implemented.

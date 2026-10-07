@@ -31,6 +31,11 @@ All notable changes are documented here. NEXUS follows Semantic Versioning once 
 - Embedding-provider conformance harness for dimensions, vector validity, determinism, multilingual probes, and latency bounds.
 - Evidence-gated local Skill promotion, append-only decisions, and exact state-matched rollback.
 - `nexus capability evaluate` and Skill promotion-check/promote/rollback CLI lifecycle.
+- Strict canonical agent definitions, immutable versions, integrity hashes, and exact local activation decisions.
+- Provider-neutral bounded model gateway with normalized stop reasons, usage, timeout, cancellation, and conformance harness.
+- Normalized model registry, append-only outcome metrics, explainable measured-evidence routing, and policy fingerprints.
+- Schema-v8 agent integrity/lifecycle and model routing persistence.
+- `nexus agent` and `nexus model` registry/evidence/routing commands.
 
 ### Security
 
@@ -46,6 +51,9 @@ All notable changes are documented here. NEXUS follows Semantic Versioning once 
 - Raw retrieval, evaluation-query, and synthesis-intent text is fingerprinted rather than persisted; retrieval rank has no promotion or execution authority.
 - Promotion fails closed on missing trust/license/validation/finding/behavioral evidence; rollback rejects replay and diverged state.
 - Local promotion actor identity is explicitly unauthenticated, requires acknowledgement, and cannot be represented as production approval.
+- Agent JSON rejects unknown/missing keys and agent activation is exact-version, transactional, acknowledged, and append-only audited.
+- Model routing fails closed on absent measurements by default and persists every rejection without storing raw task text.
+- Model gateway payloads and identities are bounded; no tool executor or credential path is exposed.
 
 ## [0.1.0-dev.1] - 2026-10-06
 

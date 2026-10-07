@@ -1,5 +1,21 @@
+import {
+  MODEL_CAPABILITIES,
+  MODEL_STATUSES,
+  type ModelCapability,
+  type ModelStatus,
+} from '@nexus-ai/agents';
 import { Command } from 'commander';
 
+import {
+  activateAgent,
+  listAgents,
+  listModels,
+  recordModelMetric,
+  registerAgent,
+  registerModel,
+  routeModel,
+  setModelStatus,
+} from './commands/agents.js';
 import {
   checkSkillPromotion,
   composeCapabilities,
@@ -81,6 +97,39 @@ function parseRequiredSuites(values: readonly string[]) {
   });
 }
 
+function parseModelCapabilities(values: readonly string[]): readonly ModelCapability[] {
+  if (values.length < 1 || values.length > MODEL_CAPABILITIES.length) {
+    throw new RangeError('model capabilities must contain a bounded non-empty list');
+  }
+  if (values.some((value) => !MODEL_CAPABILITIES.includes(value as ModelCapability))) {
+    throw new RangeError(`model capability must be one of: ${MODEL_CAPABILITIES.join(', ')}`);
+  }
+  return values as readonly ModelCapability[];
+}
+
+function parseModelStatus(value: string): ModelStatus {
+  if (!MODEL_STATUSES.includes(value as ModelStatus)) {
+    throw new RangeError(`model status must be one of: ${MODEL_STATUSES.join(', ')}`);
+  }
+  return value as ModelStatus;
+}
+
+function parseCliInteger(value: string, name: string, maximum: number): number {
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > maximum) {
+    throw new RangeError(`${name} must be an integer between 0 and ${maximum}`);
+  }
+  return parsed;
+}
+
+function parseCliUnit(value: string, name: string): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) {
+    throw new RangeError(`${name} must be a number between 0 and 1`);
+  }
+  return parsed;
+}
+
 const HARVEST_SOURCE_TYPES = [
   'auto',
   'local-directory',
@@ -105,7 +154,7 @@ export function createProgram(
   program
     .name('nexus')
     .description('NEXUS AI capability operating system')
-    .version('0.1.0-dev.1')
+    .version('0.1.0-dev.1', '-V, --nexus-version')
     .option('--json', 'emit machine-readable JSON')
     .showSuggestionAfterError()
     .showHelpAfterError();
@@ -209,6 +258,330 @@ export function createProgram(
         process.exitCode = 1;
       }
     });
+
+  const agent = program
+    .command('agent')
+    .description('register and activate inert, versioned canonical agents');
+
+  agent
+    .command('register')
+    .description('register a bounded JSON agent definition as an inactive candidate')
+    .argument('<definition>', 'agent definition JSON file')
+    .action(async (definition: string, _options: unknown, command: Command) => {
+      const output = outputFor(command, io);
+      try {
+        const result = await registerAgent(process.cwd(), definition);
+        writeResult(output, result, () =>
+          [
+            `Agent ${result.created ? 'registered' : 'already registered'}: ${result.name}`,
+            `  Agent: ${result.agentId}`,
+            `  Version: ${result.definition.version} (${result.versionId})`,
+            `  Status: ${result.status}`,
+            `  Definition: ${result.definitionHash}`,
+          ].join('\n'),
+        );
+      } catch (error) {
+        writeError(output, error);
+        process.exitCode = 1;
+      }
+    });
+
+  agent
+    .command('list')
+    .description('list project-local canonical agents')
+    .action(async (_options: unknown, command: Command) => {
+      const output = outputFor(command, io);
+      try {
+        const result = await listAgents(process.cwd());
+        writeResult(output, result, () =>
+          result.length === 0
+            ? 'No agents registered.'
+            : result
+                .map(
+                  (item) =>
+                    `${item.name}@${item.definition.version} [${item.status}] ${item.agentId}`,
+                )
+                .join('\n'),
+        );
+      } catch (error) {
+        writeError(output, error);
+        process.exitCode = 1;
+      }
+    });
+
+  agent
+    .command('activate')
+    .description('activate one exact agent version in explicit local-operator mode')
+    .argument('<agent-id>', 'canonical agent identity')
+    .requiredOption('--version <semver>', 'exact agent version')
+    .requiredOption('--actor <identity>', 'local operator identity declaration')
+    .requiredOption('--reason <text>', 'activation rationale')
+    .requiredOption(
+      '--acknowledge-local-operator',
+      'acknowledge that local mode does not authenticate the declared actor',
+    )
+    .action(
+      async (
+        agentId: string,
+        options: {
+          version: string;
+          actor: string;
+          reason: string;
+          acknowledgeLocalOperator: boolean;
+        },
+        command: Command,
+      ) => {
+        const output = outputFor(command, io);
+        try {
+          const result = await activateAgent(process.cwd(), agentId, options.version, {
+            actor: options.actor,
+            reason: options.reason,
+            acknowledgeLocalOperator: options.acknowledgeLocalOperator,
+          });
+          writeResult(output, result, () =>
+            [
+              'Agent activation: APPLIED',
+              `  Decision: ${result.id}`,
+              `  Agent: ${result.agentId}`,
+              `  Version: ${result.resultingVersionId}`,
+            ].join('\n'),
+          );
+        } catch (error) {
+          writeError(output, error);
+          process.exitCode = 1;
+        }
+      },
+    );
+
+  const model = program
+    .command('model')
+    .description('register models, record evidence, and persist policy-aware routes');
+
+  model
+    .command('register')
+    .description('register provider model metadata without calling the provider')
+    .requiredOption('--provider <provider>', 'provider identity')
+    .requiredOption('--model <model>', 'provider model key')
+    .requiredOption('--display-name <name>', 'human-readable model name')
+    .requiredOption('--capability <capabilities...>', 'normalized model capabilities')
+    .requiredOption('--context-window <tokens>', 'declared input context window')
+    .option('--status <status>', 'initial local availability status', 'disabled')
+    .action(
+      async (
+        options: {
+          provider: string;
+          model: string;
+          displayName: string;
+          capability: string[];
+          contextWindow: string;
+          status: string;
+        },
+        command: Command,
+      ) => {
+        const output = outputFor(command, io);
+        try {
+          const result = await registerModel(process.cwd(), {
+            provider: options.provider,
+            modelKey: options.model,
+            displayName: options.displayName,
+            capabilities: parseModelCapabilities(options.capability),
+            contextWindow: parseCliInteger(options.contextWindow, 'context-window', 10_000_000),
+            status: parseModelStatus(options.status),
+          });
+          writeResult(output, result, () =>
+            [
+              `Model ${result.created ? 'registered' : 'already registered'}: ${result.displayName}`,
+              `  ID: ${result.id}`,
+              `  Provider key: ${result.provider}/${result.modelKey}`,
+              `  Status: ${result.status}`,
+            ].join('\n'),
+          );
+        } catch (error) {
+          writeError(output, error);
+          process.exitCode = 1;
+        }
+      },
+    );
+
+  model
+    .command('list')
+    .description('list normalized model metadata without exposing credentials')
+    .action(async (_options: unknown, command: Command) => {
+      const output = outputFor(command, io);
+      try {
+        const result = await listModels(process.cwd());
+        writeResult(output, result, () =>
+          result.length === 0
+            ? 'No models registered.'
+            : result
+                .map(
+                  (item) =>
+                    `${item.provider}/${item.modelKey} [${item.status}] ${item.capabilities.join(',')}`,
+                )
+                .join('\n'),
+        );
+      } catch (error) {
+        writeError(output, error);
+        process.exitCode = 1;
+      }
+    });
+
+  model
+    .command('status')
+    .description('set local model availability metadata without calling the provider')
+    .argument('<model-id>', 'registered model identity')
+    .requiredOption('--status <status>', 'disabled, available, degraded, or unavailable')
+    .action(async (modelId: string, options: { status: string }, command: Command) => {
+      const output = outputFor(command, io);
+      try {
+        const result = await setModelStatus(
+          process.cwd(),
+          modelId,
+          parseModelStatus(options.status),
+        );
+        writeResult(output, result, () => `Model status: ${result.id} -> ${result.status}`);
+      } catch (error) {
+        writeError(output, error);
+        process.exitCode = 1;
+      }
+    });
+
+  model
+    .command('record-metric')
+    .description('append one externally measured model outcome')
+    .argument('<model-id>', 'registered model identity')
+    .requiredOption('--task-type <type>', 'bounded task classification')
+    .requiredOption('--outcome <outcome>', 'success or failure')
+    .requiredOption('--latency-ms <milliseconds>', 'measured end-to-end latency')
+    .requiredOption('--input-tokens <tokens>', 'provider-reported input tokens')
+    .requiredOption('--output-tokens <tokens>', 'provider-reported output tokens')
+    .requiredOption('--cost-microunits <cost>', 'measured cost in provider-neutral microunits')
+    .option('--evaluation-score <score>', 'independent evaluation score from 0 to 1')
+    .action(
+      async (
+        modelId: string,
+        options: {
+          taskType: string;
+          outcome: string;
+          latencyMs: string;
+          inputTokens: string;
+          outputTokens: string;
+          costMicrounits: string;
+          evaluationScore?: string;
+        },
+        command: Command,
+      ) => {
+        const output = outputFor(command, io);
+        try {
+          if (options.outcome !== 'success' && options.outcome !== 'failure') {
+            throw new RangeError('outcome must be success or failure');
+          }
+          const result = await recordModelMetric(process.cwd(), {
+            modelId,
+            taskType: options.taskType,
+            success: options.outcome === 'success',
+            latencyMs: parseCliInteger(options.latencyMs, 'latency-ms', 86_400_000),
+            inputTokens: parseCliInteger(options.inputTokens, 'input-tokens', 100_000_000),
+            outputTokens: parseCliInteger(options.outputTokens, 'output-tokens', 100_000_000),
+            costMicrounits: parseCliInteger(
+              options.costMicrounits,
+              'cost-microunits',
+              1_000_000_000_000_000,
+            ),
+            ...(options.evaluationScore === undefined
+              ? {}
+              : {
+                  evaluationScore: parseCliUnit(options.evaluationScore, 'evaluation-score'),
+                }),
+          });
+          writeResult(output, result, () => `Model metric recorded: ${result.id}`);
+        } catch (error) {
+          writeError(output, error);
+          process.exitCode = 1;
+        }
+      },
+    );
+
+  model
+    .command('route')
+    .description('persist an explainable policy-aware model routing decision')
+    .argument('<task-type>', 'bounded task classification, not raw task text')
+    .option('--require <capabilities...>', 'required model capabilities', ['text'])
+    .option('--provider <providers...>', 'allowed providers')
+    .option('--model-id <ids...>', 'allowed model identities')
+    .option('--min-context-window <tokens>', 'minimum context window', '1')
+    .option('--max-p95-latency-ms <milliseconds>', 'maximum measured p95 latency')
+    .option('--max-average-cost <microunits>', 'maximum measured average cost')
+    .option('--min-success-rate <rate>', 'minimum measured success rate', '0')
+    .option('--allow-degraded', 'allow degraded as well as available models')
+    .option('--allow-unmeasured', 'allow explicit neutral priors for unmeasured models')
+    .action(
+      async (
+        taskType: string,
+        options: {
+          require: string[];
+          provider?: string[];
+          modelId?: string[];
+          minContextWindow: string;
+          maxP95LatencyMs?: string;
+          maxAverageCost?: string;
+          minSuccessRate: string;
+          allowDegraded?: boolean;
+          allowUnmeasured?: boolean;
+        },
+        command: Command,
+      ) => {
+        const output = outputFor(command, io);
+        try {
+          const result = await routeModel(process.cwd(), taskType, {
+            requiredCapabilities: parseModelCapabilities(options.require),
+            allowedProviders: options.provider ?? [],
+            allowedModelIds: options.modelId ?? [],
+            minimumContextWindow: parseCliInteger(
+              options.minContextWindow,
+              'min-context-window',
+              10_000_000,
+            ),
+            minimumSuccessRate: parseCliUnit(options.minSuccessRate, 'min-success-rate'),
+            allowDegraded: options.allowDegraded === true,
+            allowUnmeasured: options.allowUnmeasured === true,
+            ...(options.maxP95LatencyMs === undefined
+              ? {}
+              : {
+                  maximumP95LatencyMs: parseCliInteger(
+                    options.maxP95LatencyMs,
+                    'max-p95-latency-ms',
+                    86_400_000,
+                  ),
+                }),
+            ...(options.maxAverageCost === undefined
+              ? {}
+              : {
+                  maximumAverageCostMicrounits: parseCliInteger(
+                    options.maxAverageCost,
+                    'max-average-cost',
+                    1_000_000_000_000_000,
+                  ),
+                }),
+          });
+          writeResult(output, result, () =>
+            [
+              `Model route: ${result.status.toUpperCase()}`,
+              `  Decision: ${result.id}`,
+              `  Selected: ${result.selectedModelId ?? 'none'}`,
+              ...result.candidates.map(
+                (candidate) =>
+                  `  [${candidate.eligible ? 'ELIGIBLE' : 'REJECTED'}] ${candidate.provider}/${candidate.modelKey} score=${candidate.score ?? 'n/a'} ${candidate.rejectionReasons.join(',')}`,
+              ),
+            ].join('\n'),
+          );
+          if (result.status === 'no_match') process.exitCode = 2;
+        } catch (error) {
+          writeError(output, error);
+          process.exitCode = 1;
+        }
+      },
+    );
 
   const capability = program
     .command('capability')

@@ -1,6 +1,6 @@
 # NEXUS Evaluation Methodology
 
-**Status:** methodology baseline; Phases 1–4 have deterministic software and local selection-regression tests, but no model benchmark results.
+**Status:** methodology baseline; Phases 1–4 and the Phase 5 agent/model foundation have deterministic software tests, but no model or orchestration benchmark results.
 
 ## Principles
 
@@ -93,6 +93,6 @@ Critical cases have binary fail-closed assertions in addition to quality scoring
 
 ## Current evidence
 
-Verification through Phase 4 covers deterministic software behavior: compiler, lint, migrations/integrity, redaction, inert harvesting, static trust evidence, capability graph isolation, vector validation, hybrid ranking, bounded composition, and CLI end-to-end execution.
+Verification through the Phase 5 foundation covers deterministic software behavior: compiler, lint, migrations/integrity, redaction, inert harvesting, static trust evidence, capability graph isolation, vector validation, hybrid ranking, bounded composition, immutable agent registration/activation, model-gateway normalization, explainable routing, and CLI end-to-end execution.
 
-The Phase 4 corpus v2 is a 24-case synthetic software-capability selection suite with six composition cases. Against the pinned lexical-only ablation, hybrid lexical-plus-structured-metadata retrieval scores recall@5 `1.0` versus `0.583333` and MRR@5 `0.909722` versus `0.562500`; all six expected composition bundles are selected exactly. These are reproducible local regression results for the disclosed synthetic corpus, not general semantic-quality results. No external embedding-provider, AI model, behavioral Skill execution, model-routing, orchestration, or production retrieval score exists yet.
+The Phase 4 corpus v2 is a 24-case synthetic software-capability selection suite with six composition cases. Against the pinned lexical-only ablation, hybrid lexical-plus-structured-metadata retrieval scores recall@5 `1.0` versus `0.583333` and MRR@5 `0.909722` versus `0.562500`; all six expected composition bundles are selected exactly. These are reproducible local regression results for the disclosed synthetic corpus, not general semantic-quality results. No external embedding-provider, AI model, behavioral Skill execution, model-routing quality benchmark, orchestration, or production retrieval score exists yet.

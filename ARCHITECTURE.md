@@ -1,6 +1,6 @@
 # NEXUS AI Architecture
 
-**Status:** accepted Phase 2 canonical Skill baseline
+**Status:** accepted through the Phase 5 agent/model foundation
 **Last reviewed:** 2026-10-07
 
 ## 1. Architectural thesis
@@ -77,9 +77,17 @@ Implements the Phase 2 canonical Skill boundary. It strictly parses data-only Ag
 
 The registry emits the versioned canonical metadata schema, disables executable bits, records per-file integrity and provenance, enforces immutable `(skill_id, version)` identity, indexes Skill names/descriptions in FTS5, and can re-verify managed artifacts. Structural test results explicitly distinguish deterministic checks from behavioral execution. See [docs/skills.md](docs/skills.md).
 
+### `@nexus-ai/capabilities`
+
+Implements the project-scoped typed capability graph, active-Skill synchronization, bounded hybrid retrieval, validated exact-vector reference backend, provider conformance, dependency/conflict-aware composition, inert synthesis proposals, versioned retrieval evaluation, and local evidence-gated Skill promotion/rollback. Retrieval and composition remain selection evidence rather than authorization.
+
+### `@nexus-ai/agents`
+
+Implements strict immutable agent definitions, candidate registration, acknowledged exact-version local activation, normalized model metadata, append-only metric evidence, deterministic policy-aware routing, and a bounded complete-response provider port. It has no provider SDK, credential reader, planner, tool executor, or durable workflow implementation. See [docs/agents-and-models.md](docs/agents-and-models.md).
+
 ### `@nexus-ai/cli`
 
-Provides initialization, diagnostics, status, checksummed migration with online backup, validation, consistent exit codes, and JSON output. Skill commands analyze, structurally test, install/register, search, and integrity-verify packages. Commands call application functions directly; the CLI is not the domain layer.
+Provides initialization, diagnostics, status, checksummed migration with online backup, validation, consistent exit codes, and JSON output. Skill commands analyze, structurally test, install/register, search, and integrity-verify packages. Capability, agent, and model commands expose their inert registries, evaluation, evidence, and routing lifecycle. Commands call application functions directly; the CLI is not the domain layer.
 
 ## 4. Future bounded contexts
 
@@ -124,7 +132,7 @@ execution ──1:N── execution_step ──1:N── event
     └──1:N── evaluation ──1:N── evaluation_score
 ```
 
-Local keyword retrieval for memories and registered Skills uses SQLite FTS5. Semantic vectors are deliberately not faked. Phase 4 will introduce an embedding-provider contract, measured hybrid retrieval, and a PostgreSQL/pgvector path. Vector search alone is not considered sufficient; lexical, metadata, graph, recency, trust, and reranking signals will be evaluated together.
+Local keyword retrieval for memories and registered Skills uses SQLite FTS5. Semantic vectors are deliberately not faked. Phase 4 introduced a provider-neutral embedding contract, measured hybrid retrieval, and a bounded exact-vector reference backend; scalable ANN/PostgreSQL adapters remain future measured work. Vector search alone is not considered sufficient: implemented selection combines disclosed lexical, optional semantic, metadata, and graph signals.
 
 ## 7. Execution architecture
 
@@ -137,7 +145,7 @@ The durable orchestration target separates deterministic workflow state from non
 - approval pauses are durable;
 - compensation is explicit for reversible external effects.
 
-Phase 1 does not claim durable distributed execution. The current runtime is an in-process lifecycle foundation only.
+The current runtime does not claim durable distributed execution. Phase 5 has selected deterministic workflow state plus nondeterministic activities, with Temporal as the production direction, but no workflow worker or replay/crash test exists yet.
 
 ## 8. Security architecture
 

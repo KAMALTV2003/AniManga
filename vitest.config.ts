@@ -7,6 +7,7 @@ const fromRoot = (path: string): string => fileURLToPath(new URL(path, import.me
 export default defineConfig({
   resolve: {
     alias: {
+      '@nexus-ai/agents': fromRoot('./packages/agents/src/index.ts'),
       '@nexus-ai/capabilities': fromRoot('./packages/capabilities/src/index.ts'),
       '@nexus-ai/core': fromRoot('./packages/core/src/index.ts'),
       '@nexus-ai/config': fromRoot('./packages/config/src/index.ts'),

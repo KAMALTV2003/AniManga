@@ -1,6 +1,6 @@
 # NEXUS AI
 
-> **Current maturity: Phase 4 capability selection (`0.1.0-dev.1`).** Phases 1–4 are implemented and verified within documented local/inert boundaries. NEXUS is under active development and must not be represented as production-ready.
+> **Current maturity: Phase 5 agent/model foundation (`0.1.0-dev.1`).** Phases 1–4 are complete; Phase 5 is in progress within documented local/inert boundaries. NEXUS is under active development and must not be represented as production-ready.
 
 NEXUS AI is a capability operating system for AI agents. Its goal is to discover, verify, compose, execute, evaluate, and continuously improve reusable capabilities without trusting arbitrary code or loading an entire capability catalog into model context.
 
@@ -27,10 +27,12 @@ Phases 1–4 provide tested infrastructure, an inert canonical Skill registry, b
 - Dependency- and conflict-aware smallest-sufficient bundle composition plus inert synthesis contracts for measured gaps.
 - Versioned append-only retrieval evaluation against a pinned baseline, with measured local improvement on the disclosed synthetic corpus.
 - Fail-closed local Skill promotion gates and exact, state-matched rollback with append-only evidence decisions.
-- CLI commands for initialization, migration, diagnostics, status, validation, Skill lifecycle, capability selection/evaluation, and local promotion/rollback, all with `--json` output.
+- Immutable canonical agent versions with strict bounded policy, candidate registration, and acknowledged local exact-version activation.
+- Normalized model registry, append-only outcome metrics, explainable fail-closed routing, and a bounded provider-neutral complete-response gateway.
+- CLI commands for initialization, migration, diagnostics, status, validation, Skill lifecycle, capability selection/evaluation, agents, model evidence/routing, and local promotion/rollback, all with `--json` output.
 - Unit, integration, database, malicious-archive, hostile-harvest, security-behavior, and CLI end-to-end tests.
 
-Sandboxed Skill execution and a behavioral evaluation runner, plus the agent runtime, model gateway, MCP gateway, dashboard, and exporters, remain roadmap work and are clearly marked in [PROJECT-STATUS.md](docs/PROJECT-STATUS.md).
+Sandboxed Skill execution and a behavioral evaluation runner, plus agent execution/orchestration, external model adapters, the MCP gateway, dashboard, and exporters, remain roadmap work and are clearly marked in [PROJECT-STATUS.md](docs/PROJECT-STATUS.md).
 
 ## Requirements
 
@@ -63,6 +65,10 @@ npm run nexus -- capability search "secure release" --tag security release --jso
 npm run nexus -- capability compose "prepare a secure release" --require release security-review --json
 npm run nexus -- capability evaluate ./retrieval-suite.json --json
 npm run nexus -- skill promotion-check <skill-id> --version 1.0.0 --json
+npm run nexus -- agent register ./agent.json --json
+npm run nexus -- agent list --json
+npm run nexus -- model list --json
+npm run nexus -- model route release --require text structured_output --json
 ```
 
 Initialize a different existing directory:
@@ -92,6 +98,7 @@ packages/
   skills/              Inert Skill adapters, canonical schema, registry
   harvest/             Bounded acquisition, static trust analysis, quarantine
   capabilities/        Typed graph, hybrid retrieval, embedding index, composition
+  agents/              Canonical agents, model gateway, metrics, explainable routing
 docs/
   architecture/        Architecture decisions and component design
   research/            Dated ecosystem research
@@ -120,8 +127,10 @@ This means:
 - [Canonical Skill system](docs/skills.md)
 - [Harvesting and trust](docs/harvesting.md)
 - [Capability graph, retrieval, and composition](docs/capabilities.md)
+- [Canonical agents and model routing](docs/agents-and-models.md)
 - [Phase 3 security review](docs/security-review-phase3.md)
 - [Phase 4 security review](docs/security-review-phase4-foundation.md)
+- [Phase 5 foundation security review](docs/security-review-phase5-foundation.md)
 - [Implementation roadmap](docs/implementation-roadmap.md)
 - [Competitive research](docs/research/competitive-analysis.md)
 - [Threat model](docs/threat-model.md)
