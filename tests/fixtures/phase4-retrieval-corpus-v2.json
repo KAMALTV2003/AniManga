@@ -1,0 +1,319 @@
+{
+  "name": "nexus-phase4-selection-regression",
+  "version": "2",
+  "license": "CC0-1.0",
+  "description": "Synthetic deterministic software-capability selection regression suite with lexical and structured-metadata cases. It is not an external or model-quality benchmark.",
+  "capabilities": [
+    {
+      "name": "release-notes",
+      "description": "Draft release notes and changelogs from verified commits.",
+      "tags": ["release"],
+      "behaviors": ["release-notes", "changelog"],
+      "contextBytes": 120
+    },
+    {
+      "name": "security-review",
+      "description": "Find vulnerabilities, unsafe flows, and policy violations in source changes.",
+      "tags": ["security"],
+      "behaviors": ["security-review", "threat-analysis"],
+      "contextBytes": 180
+    },
+    {
+      "name": "incident-response",
+      "description": "Triage incidents and prepare bounded service recovery actions.",
+      "tags": ["incident"],
+      "behaviors": ["incident-triage", "recovery-plan"],
+      "contextBytes": 170
+    },
+    {
+      "name": "api-documentation",
+      "description": "Document typed HTTP request and response contracts.",
+      "tags": ["api"],
+      "behaviors": ["api-documentation", "schema-documentation"],
+      "contextBytes": 140
+    },
+    {
+      "name": "dependency-audit",
+      "description": "Audit dependency manifests, licenses, provenance, and advisories.",
+      "tags": ["dependencies"],
+      "behaviors": ["dependency-audit", "license-review"],
+      "contextBytes": 190
+    },
+    {
+      "name": "test-planning",
+      "description": "Plan deterministic boundary, failure, and regression tests.",
+      "tags": ["testing"],
+      "behaviors": ["test-planning", "regression-design"],
+      "contextBytes": 130
+    },
+    {
+      "name": "schema-migration",
+      "description": "Plan schema migrations with compatibility and data integrity checks.",
+      "tags": ["migration"],
+      "behaviors": ["schema-migration"],
+      "contextBytes": 210,
+      "dependsOn": ["database-backup", "rollback-plan"]
+    },
+    {
+      "name": "database-backup",
+      "description": "Create and verify consistent database backup snapshots.",
+      "tags": ["backup"],
+      "behaviors": ["database-backup"],
+      "contextBytes": 100
+    },
+    {
+      "name": "performance-profile",
+      "description": "Profile latency, throughput, CPU, and memory usage.",
+      "tags": ["performance"],
+      "behaviors": ["performance-profile"],
+      "contextBytes": 160
+    },
+    {
+      "name": "cost-analysis",
+      "description": "Analyze model token cost and execution budget usage.",
+      "tags": ["cost"],
+      "behaviors": ["cost-analysis"],
+      "contextBytes": 110
+    },
+    {
+      "name": "accessibility-review",
+      "description": "Review user interfaces for accessibility requirements.",
+      "tags": ["accessibility"],
+      "behaviors": ["accessibility-review"],
+      "contextBytes": 150
+    },
+    {
+      "name": "localization",
+      "description": "Prepare localization resources and locale coverage checks.",
+      "tags": ["localization"],
+      "behaviors": ["localization"],
+      "contextBytes": 125
+    },
+    {
+      "name": "changelog-validation",
+      "description": "Validate changelog structure, links, versions, and release dates.",
+      "tags": ["changelog-validation"],
+      "behaviors": ["changelog-validation"],
+      "contextBytes": 90
+    },
+    {
+      "name": "policy-review",
+      "description": "Review declarative policy rules for conflicts and unsafe permissions.",
+      "tags": ["policy"],
+      "behaviors": ["policy-review"],
+      "contextBytes": 175
+    },
+    {
+      "name": "provenance-audit",
+      "description": "Verify source hashes, revisions, attribution, and provenance links.",
+      "tags": ["provenance"],
+      "behaviors": ["provenance-audit"],
+      "contextBytes": 135
+    },
+    {
+      "name": "retrieval-evaluation",
+      "description": "Measure retrieval recall, ranking quality, regressions, and latency.",
+      "tags": ["retrieval-evaluation"],
+      "behaviors": ["retrieval-evaluation"],
+      "contextBytes": 145
+    },
+    {
+      "name": "rollback-plan",
+      "description": "Design deterministic rollback checkpoints and restoration verification.",
+      "tags": ["rollback"],
+      "behaviors": ["rollback-plan"],
+      "contextBytes": 105
+    },
+    {
+      "name": "context-optimizer",
+      "description": "Reduce prompt context while preserving required evidence and constraints.",
+      "tags": ["context"],
+      "behaviors": ["context-optimization"],
+      "contextBytes": 115
+    }
+  ],
+  "cases": [
+    {
+      "id": "lexical-release",
+      "query": "draft release notes from verified commits",
+      "expectedNames": ["release-notes"],
+      "forbiddenNames": ["incident-response"]
+    },
+    {
+      "id": "lexical-security",
+      "query": "find vulnerabilities and unsafe flows",
+      "expectedNames": ["security-review"],
+      "forbiddenNames": ["release-notes"]
+    },
+    {
+      "id": "lexical-incident",
+      "query": "triage incidents and service recovery",
+      "expectedNames": ["incident-response"]
+    },
+    {
+      "id": "lexical-api",
+      "query": "document HTTP request response contracts",
+      "expectedNames": ["api-documentation"]
+    },
+    {
+      "id": "lexical-dependencies",
+      "query": "audit dependency manifests licenses provenance advisories",
+      "expectedNames": ["dependency-audit"],
+      "forbiddenNames": ["accessibility-review"]
+    },
+    {
+      "id": "lexical-testing",
+      "query": "plan boundary failure regression tests",
+      "expectedNames": ["test-planning"]
+    },
+    {
+      "id": "lexical-migration",
+      "query": "plan schema migrations compatibility integrity",
+      "expectedNames": ["schema-migration"]
+    },
+    {
+      "id": "lexical-backup",
+      "query": "verify consistent database backup snapshots",
+      "expectedNames": ["database-backup"]
+    },
+    {
+      "id": "lexical-performance",
+      "query": "profile latency throughput CPU memory",
+      "expectedNames": ["performance-profile"]
+    },
+    {
+      "id": "lexical-cost",
+      "query": "analyze model token cost execution budget",
+      "expectedNames": ["cost-analysis"]
+    },
+    {
+      "id": "lexical-accessibility",
+      "query": "review user interface accessibility requirements",
+      "expectedNames": ["accessibility-review"]
+    },
+    {
+      "id": "lexical-provenance",
+      "query": "verify source hashes revisions attribution provenance",
+      "expectedNames": ["provenance-audit"]
+    },
+    {
+      "id": "metadata-release",
+      "query": "assemble the verified delivery artifact",
+      "expectedNames": ["release-notes"],
+      "forbiddenNames": ["incident-response"],
+      "preferredTags": ["release"]
+    },
+    {
+      "id": "metadata-security",
+      "query": "examine dangerous information paths",
+      "expectedNames": ["security-review"],
+      "forbiddenNames": ["policy-review"],
+      "preferredTags": ["security"]
+    },
+    {
+      "id": "metadata-incident",
+      "query": "coordinate outage containment",
+      "expectedNames": ["incident-response"],
+      "preferredTags": ["incident"]
+    },
+    {
+      "id": "metadata-api",
+      "query": "explain interface payload shapes",
+      "expectedNames": ["api-documentation"],
+      "preferredTags": ["api"]
+    },
+    {
+      "id": "metadata-dependencies",
+      "query": "vet third party packages",
+      "expectedNames": ["dependency-audit"],
+      "preferredTags": ["dependencies"]
+    },
+    {
+      "id": "metadata-testing",
+      "query": "design edge assurances",
+      "expectedNames": ["test-planning"],
+      "preferredTags": ["testing"]
+    },
+    {
+      "id": "metadata-migration",
+      "query": "transition persistent records",
+      "expectedNames": ["schema-migration"],
+      "preferredTags": ["migration"]
+    },
+    {
+      "id": "metadata-backup",
+      "query": "preserve recoverable state",
+      "expectedNames": ["database-backup"],
+      "preferredTags": ["backup"]
+    },
+    {
+      "id": "metadata-performance",
+      "query": "locate runtime bottlenecks",
+      "expectedNames": ["performance-profile"],
+      "preferredTags": ["performance"]
+    },
+    {
+      "id": "metadata-cost",
+      "query": "reduce provider spending",
+      "expectedNames": ["cost-analysis"],
+      "forbiddenNames": ["performance-profile"],
+      "preferredTags": ["cost"]
+    },
+    {
+      "id": "metadata-accessibility",
+      "query": "check inclusive interaction",
+      "expectedNames": ["accessibility-review"],
+      "preferredTags": ["accessibility"]
+    },
+    {
+      "id": "metadata-localization",
+      "query": "adapt product language",
+      "expectedNames": ["localization"],
+      "preferredTags": ["localization"]
+    }
+  ],
+  "compositionCases": [
+    {
+      "id": "secure-release",
+      "query": "prepare a secure software release",
+      "requiredCapabilities": ["release-notes", "security-review"],
+      "expectedNames": ["release-notes", "security-review"],
+      "maxContextBytes": 1000
+    },
+    {
+      "id": "safe-schema-change",
+      "query": "change persistent storage with recovery",
+      "requiredCapabilities": ["schema-migration", "database-backup", "rollback-plan"],
+      "expectedNames": ["schema-migration", "database-backup", "rollback-plan"],
+      "maxContextBytes": 1000
+    },
+    {
+      "id": "measured-optimization",
+      "query": "profile and reduce execution resource cost",
+      "requiredCapabilities": ["performance-profile", "cost-analysis"],
+      "expectedNames": ["performance-profile", "cost-analysis"],
+      "maxContextBytes": 1000
+    },
+    {
+      "id": "verified-api-docs",
+      "query": "document and verify an interface change",
+      "requiredCapabilities": ["api-documentation", "provenance-audit"],
+      "expectedNames": ["api-documentation", "provenance-audit"],
+      "maxContextBytes": 1000
+    },
+    {
+      "id": "quality-release",
+      "query": "release documentation with structure validation",
+      "requiredCapabilities": ["release-notes", "changelog-validation"],
+      "expectedNames": ["release-notes", "changelog-validation"],
+      "maxContextBytes": 1000
+    },
+    {
+      "id": "efficient-evaluation",
+      "query": "measure retrieval while minimizing prompt context",
+      "requiredCapabilities": ["retrieval-evaluation", "context-optimization"],
+      "expectedNames": ["retrieval-evaluation", "context-optimizer"],
+      "maxContextBytes": 1000
+    }
+  ]
+}

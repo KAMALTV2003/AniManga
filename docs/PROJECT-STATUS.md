@@ -2,7 +2,7 @@
 
 **Updated:** 2026-10-07
 **Version:** `0.1.0-dev.1`
-**Overall state:** Phases 1–3 complete; Phase 4 capability-selection foundation verified locally
+**Overall state:** Phases 1–4 implemented and verified within documented local/inert boundaries
 **Production-ready:** No
 
 ## Completed
@@ -31,60 +31,65 @@
 - [x] Normalized stable finding fingerprints and evidence hashes that do not persist matched secret text.
 - [x] Deterministic evidence-backed security, quality, documentation, static-test, and context-efficiency scores; maintenance/compatibility remain null when unmeasured.
 - [x] Exact content-hash duplicate detection plus honestly labeled metadata character-trigram near-duplicate proposals.
-- [x] Deterministic candidate/quarantine policy; atomic non-executable quarantine; candidate metadata v2; inactive candidate status with no current-version promotion or normal search visibility.
+- [x] Deterministic candidate/quarantine policy; atomic non-executable quarantine; candidate metadata v2; inactive candidate status with no automatic promotion or normal search visibility.
 - [x] Metadata-v1 read compatibility plus trust-aware metadata-v2 runtime and static JSON Schema.
 - [x] Schema-v5 trust persistence for scans, harvest runs, license reviews, deterministic assessment links, and duplicate proposals while preserving schema-v3/v4 data.
 - [x] CLI `skill harvest` lifecycle for local/ZIP/HTTPS/Git inspection and policy-bound registration. Direct `skill install` requires explicit `--trusted-local-authoring`.
 - [x] Hostile integration fixtures covering policy injection, remote shell pipes, URLs, manifests, dependencies, hooks, binaries, executable permissions, exact duplicates, SSRF, process growth/output limits, and inert Git plumbing.
 - [x] Harvesting guide, Phase 3 security review, updated threat model, and reproducible Phase 3 benchmark.
 
-### Phase 4 capability selection — foundation complete, phase exit not met
+### Phase 4 capability selection
 
 - [x] Typed `@nexus-ai/capabilities` package with project-scoped active nodes, immutable version documents, typed edges, and exact active-Skill synchronization.
 - [x] Schema-v6 FTS5 capability documents, validated embedding records, retrieval runs, composition plans, and inert synthesis proposals while preserving earlier graph records.
 - [x] Bounded `hybrid-rrf-v1` retrieval with lexical, optional semantic, metadata, and graph evidence reported separately.
-- [x] Provider-neutral embedding port, strict vector/count/dimension/norm validation, stale-vector rejection, and a bounded SQLite exact-cosine reference backend.
+- [x] Provider-neutral embedding port, strict vector/count/dimension/norm validation, stale-vector rejection, bounded SQLite exact-cosine backend, and provider conformance harness.
 - [x] Dependency/conflict/forbidden-node/context-aware `set-cover-v1` composition with explicit bounded-exact, bounded-search, and infeasible labels.
 - [x] Evidence-backed synthesis contracts restricted to actual uncovered behaviors; raw query/intent text is hashed rather than persisted and no executable content is generated.
-- [x] CLI capability synchronization, search, composition, and proposal lifecycle with JSON output.
-- [x] Versioned six-case synthetic retrieval corpus and reproducible baseline benchmark. Current result is parity with lexical retrieval, not evidence of superiority.
-- [ ] Larger representative corpus, calibrated semantic provider runs, measured improvement over pinned baselines, evaluation-gated promotion, and rollback.
+- [x] Schema-v7 append-only retrieval evaluation runs/cases and promotion decisions, preserving earlier schema data.
+- [x] Versioned 24-case retrieval and six-case composition corpus with a strict pinned-baseline gate and explicit synthetic-corpus labeling.
+- [x] Fail-closed local Skill promotion requiring trust, license, structural, finding, aggregate behavioral, and security-score evidence.
+- [x] State-matched, replay-resistant rollback restoring the exact pre-promotion registry state and derived graph.
+- [x] CLI capability sync/search/composition/proposal/evaluation and Skill promotion-check/promote/rollback lifecycle with JSON output.
+- [x] Local exit gate passed: recall@5 improved from 0.583333 to 1.0, MRR@5 from 0.562500 to 0.909722, and all six composition bundles matched expected results.
+
+External semantic-provider calibration, authenticated production approval, adversarial real-world corpora, and scalable ANN conformance remain explicitly unclaimed.
 
 ## Blocked or deliberately not claimed
 
-| Capability                             | State                             | Reason/gate                                                                                     |
-| -------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------- |
-| Inert local/ZIP/HTTPS/Git harvesting   | Implemented for local development | hostile multi-tenant use still needs isolated workers and kernel-enforced resource quotas       |
-| License legal verification             | Not claimed                       | syntax/detection consistency is evidence, not legal advice or rights verification               |
-| Malware/dependency safety verdict      | Not claimed                       | static rules do not replace specialist binary, SBOM, advisory, signature, or detonation systems |
-| Candidate promotion                    | Blocked                           | authenticated policy decision, human approval, audit, and evaluation gates are not implemented  |
-| Execute Skills/tools                   | Blocked                           | sandbox, policy engine, approvals, and deny-by-default runtime egress are required              |
-| Behavioral Skill quality/security      | Not claimed                       | static scores do not measure task success or safe runtime behavior                              |
-| Model inference/routing                | Not implemented                   | provider contracts and credential-safe integration tests required                               |
-| Multi-agent orchestration              | Not implemented                   | durable execution and agent runtime required                                                    |
-| Semantic search/composition            | Foundation implemented            | real provider calibration, larger corpus, improvement gate, and scalable backend remain         |
-| Memory learning/promotion              | Not implemented                   | trust lifecycle and poisoning tests required                                                    |
-| MCP connectivity                       | Blocked                           | protocol validation, permission, secret, and health gateway required                            |
-| API/dashboard                          | Not implemented                   | authentication, authorization, PostgreSQL, tenancy, and API contracts required                  |
-| Claude/Codex/etc. export compatibility | Not claimed                       | adapter and target-format conformance tests required                                            |
-| Production deployment                  | Blocked                           | remaining security/reliability phases and external review incomplete                            |
+| Capability                             | State                             | Reason/gate                                                                                         |
+| -------------------------------------- | --------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Inert local/ZIP/HTTPS/Git harvesting   | Implemented for local development | hostile multi-tenant use still needs isolated workers and kernel-enforced resource quotas           |
+| License legal verification             | Not claimed                       | syntax/detection consistency is evidence, not legal advice or rights verification                   |
+| Malware/dependency safety verdict      | Not claimed                       | static rules do not replace specialist binary, SBOM, advisory, signature, or detonation systems     |
+| Candidate promotion                    | Local evidence-gated mode only    | actor is unauthenticated; production authorization, approval, signatures, and external audit remain |
+| Execute Skills/tools                   | Blocked                           | sandbox, policy engine, approvals, and deny-by-default runtime egress are required                  |
+| Behavioral Skill quality/security      | Not claimed                       | static scores do not measure task success or safe runtime behavior                                  |
+| Model inference/routing                | Not implemented                   | provider contracts and credential-safe integration tests required                                   |
+| Multi-agent orchestration              | Not implemented                   | durable execution and agent runtime required                                                        |
+| Semantic search/composition            | Local hybrid path implemented     | external semantic-provider quality and scalable ANN backend remain unverified                       |
+| Memory learning/promotion              | Not implemented                   | trust lifecycle and poisoning tests required                                                        |
+| MCP connectivity                       | Blocked                           | protocol validation, permission, secret, and health gateway required                                |
+| API/dashboard                          | Not implemented                   | authentication, authorization, PostgreSQL, tenancy, and API contracts required                      |
+| Claude/Codex/etc. export compatibility | Not claimed                       | adapter and target-format conformance tests required                                                |
+| Production deployment                  | Blocked                           | remaining security/reliability phases and external review incomplete                                |
 
 ## Verification evidence
 
 Latest confirmed local verification on Linux x64 and Node `v22.22.3`:
 
 - `npm run verify`: passed end to end.
-- Tests: **72 passed, 0 failed** across **15 files**.
-- Package coverage: **82.74% lines, 80.93% statements, 86.49% functions, 69.04% branches**.
-- `@nexus-ai/capabilities` coverage: **88.22% lines, 85.25% statements, 95.61% functions, 71.32% branches**.
+- Tests: **79 passed, 0 failed** across **17 files**.
+- Package coverage: **83.71% lines, 81.89% statements, 87.76% functions, 70.17% branches**.
+- `@nexus-ai/capabilities` coverage: **89.72% lines, 86.98% statements, 95.50% functions, 73.98% branches**.
 - `@nexus-ai/harvest` coverage: **73.21% lines, 71.12% statements, 74.12% functions, 58.75% branches**; remote network failure/success paths remain a priority for isolated integration coverage.
-- `@nexus-ai/skills` coverage: **86.63% lines, 85.65% statements, 91.42% functions, 76.92% branches**.
-- Real-process CLI E2E exercised initialization, schema v6, validation/migration, inert Skill analysis/test/harvest/install/search/verify, capability sync/search/composition, secret redaction, and a script fixture that remained unexecuted.
+- `@nexus-ai/skills` coverage: **86.92% lines, 85.92% statements, 92.38% functions, 77.11% branches**.
+- Real-process CLI E2E exercised initialization, schema v7, validation/migration, inert Skill analysis/test/harvest/install/search/verify, capability sync/search/composition/evaluation, secret redaction, and a script fixture that remained unexecuted.
 - Formatting, typed ESLint, source-placeholder rejection, TypeScript project references, coverage thresholds, and `npm audit --audit-level=high`: passed.
 - Dependency advisory result: **0 known vulnerabilities**.
 - Installed direct dependencies for Phase 3 are exact-pinned: `ipaddr.js@2.5.0`, `spdx-expression-parse@5.0.0`, and `@types/spdx-expression-parse@4.0.0`.
 - Registry-signature verification is not claimed: the last `npm audit signatures` retry failed while fetching the Sigstore TUF root with `ECONNRESET`.
-- Database regression starts from a real schema-v3 database, applies migrations v4–v6, preserves existing Skill and capability-node records, and separately verifies online backup integrity with SQLite `quick_check`.
+- Database regression starts from a real schema-v3 database, applies migrations v4–v7, preserves existing Skill and capability-node records, and separately verifies online backup integrity with SQLite `quick_check`.
 
 ## Security review
 
@@ -98,7 +103,8 @@ Detailed reviews are [security-review-phase3.md](security-review-phase3.md) and 
 - SQLite remains local/single-operator; it does not provide tenant identity, authorization, or durable external audit.
 - Remote Git acquisition was verified on Linux, not certified cross-platform.
 - The local exact-cosine backend is bounded and tested with a deterministic test provider; no production embedding provider, ANN backend, provider timeout/budget, or credential-isolation claim exists.
-- Retrieval and composition are project-scoped selection evidence, not authenticated authorization or promotion decisions.
+- Retrieval and composition are project-scoped selection evidence and cannot authorize promotion; the separate local promotion gate is evidence-backed but actor identity is not authenticated.
+- Retrieval corpus v2 is synthetic; external semantic providers and adversarial real-world corpora remain unmeasured.
 - Imported execution remains prohibited.
 
 ## Performance
@@ -122,14 +128,22 @@ The prior Phase 2 benchmark used two warmups and 10 fresh Node processes per com
 | clean `skill harvest --inspect-only`   | 233.22 ms | 253.24 ms |
 | hostile `skill harvest --inspect-only` | 237.30 ms | 268.69 ms |
 
-### Phase 4 foundation baseline
+### Phase 4 selection gate
 
-`npm run benchmark:phase4 -- 20` used two warmups and 20 in-process measured runs over six active capabilities and six queries from synthetic corpus v1. Semantic embeddings were disabled. Both FTS5 lexical-only and lexical-plus-metadata achieved recall@1 `1.0` and MRR@5 `1.0`. Median full-corpus latency was 4.77 ms for lexical-only and 4.90 ms for the Phase 4 foundation; p95 was 6.88 ms and 7.00 ms respectively.
+`npm run benchmark:phase4 -- 10` used two warmups and 10 in-process measured runs over synthetic corpus v2: 18 capabilities, 24 retrieval cases, and six composition cases. Semantic embeddings were disabled. Twelve disclosed cases exercise structured metadata using wording intentionally different from indexed descriptions; six cases include explicit forbidden-capability constraints.
 
-The small sanity corpus demonstrates deterministic parity, not superiority, semantic quality, or production scale. Phase 4's improvement exit criterion remains open.
+| Retrieval measure    | Lexical only | Hybrid candidate |     Delta |
+| -------------------- | -----------: | ---------------: | --------: |
+| Recall@5             |     0.583333 |         1.000000 | +0.416667 |
+| MRR@5                |     0.562500 |         0.909722 | +0.347222 |
+| Forbidden-hit rate   |     0.000000 |         0.000000 |  0.000000 |
+| Median per-case time |     0.567 ms |         0.595 ms |           |
+| p95 per-case time    |     1.987 ms |         1.614 ms |           |
 
-These are reproducible local baselines, not product SLOs. OS filesystem caches were warm. Network transfer, remote Git servers, large hostile payloads, worker isolation, calibrated semantic retrieval, model routing, and behavioral evaluation need separate controlled benchmarks.
+Composition completion and exact expected-bundle rates were both `1.0` across six cases, with 288.33 mean context bytes. Median full-suite times were 31.18 ms for retrieval and 8.36 ms for composition. Per-case medians aggregate iteration medians; per-case p95 values aggregate iteration p95s.
+
+These are reproducible local regression results, not product SLOs or general semantic claims. OS caches were warm. External providers, network transfer, large hostile payloads, worker isolation, model routing, and behavioral execution need separate controlled benchmarks.
 
 ## Next milestone
 
-Continue Phase 4 with a larger versioned retrieval/composition corpus, real embedding-provider conformance and calibration, measured backend comparison, deterministic evaluation gates, promotion decisions, and rollback. Imported execution remains blocked until later policy, approval, and sandbox gates are implemented.
+Phase 5: canonical agent registry, normalized model-provider gateway, measured policy-aware routing, bounded planner/executor state machine, durable execution decision, and reproducible orchestration. Imported tools and Skills remain non-executable until the policy/approval/sandbox gates are implemented.

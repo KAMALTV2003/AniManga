@@ -27,7 +27,10 @@ All notable changes are documented here. NEXUS follows Semantic Versioning once 
 - Dependency/conflict/context-aware capability composition and inert evidence-backed synthesis proposals.
 - Schema-v6 capability documents, embeddings, retrieval runs, composition plans, and synthesis proposal persistence.
 - `nexus capability sync`, `search`, `compose`, and `propose` commands.
-- Versioned synthetic Phase 4 retrieval corpus and reproducible benchmark.
+- Versioned Phase 4 retrieval/composition corpus, append-only evaluation gate, and reproducible benchmark.
+- Embedding-provider conformance harness for dimensions, vector validity, determinism, multilingual probes, and latency bounds.
+- Evidence-gated local Skill promotion, append-only decisions, and exact state-matched rollback.
+- `nexus capability evaluate` and Skill promotion-check/promote/rollback CLI lifecycle.
 
 ### Security
 
@@ -40,7 +43,9 @@ All notable changes are documented here. NEXUS follows Semantic Versioning once 
 - Imported remote content remains inert through acquisition, scanning, quarantine, and candidate registration.
 - Capability indexing excludes non-active Skills and public graph mutation rejects cross-project edges.
 - Embedding count, dimension, finite-value, norm, staleness, and exact-work budgets are validated.
-- Raw retrieval and synthesis intent text is fingerprinted rather than persisted; retrieval rank has no promotion or execution authority.
+- Raw retrieval, evaluation-query, and synthesis-intent text is fingerprinted rather than persisted; retrieval rank has no promotion or execution authority.
+- Promotion fails closed on missing trust/license/validation/finding/behavioral evidence; rollback rejects replay and diverged state.
+- Local promotion actor identity is explicitly unauthenticated, requires acknowledgement, and cannot be represented as production approval.
 
 ## [0.1.0-dev.1] - 2026-10-06
 

@@ -30,7 +30,7 @@ describe('nexus CLI', () => {
     expect(initialized.status).toBe(0);
     expect(JSON.parse(initialized.stdout)).toMatchObject({
       status: 'initialized',
-      schemaVersion: 6,
+      schemaVersion: 7,
     });
 
     const doctor = run(root, 'doctor');
@@ -46,14 +46,14 @@ describe('nexus CLI', () => {
 
     const validation = run(root, 'validate');
     expect(validation.status).toBe(0);
-    expect(JSON.parse(validation.stdout)).toMatchObject({ valid: true, schemaVersion: 6 });
+    expect(JSON.parse(validation.stdout)).toMatchObject({ valid: true, schemaVersion: 7 });
 
     const migration = run(root, 'migrate');
     expect(migration.status).toBe(0);
     expect(JSON.parse(migration.stdout)).toMatchObject({
       migrated: false,
-      fromVersion: 6,
-      toVersion: 6,
+      fromVersion: 7,
+      toVersion: 7,
       health: 'healthy',
     });
   });
@@ -130,6 +130,30 @@ describe('nexus CLI', () => {
       status: 'complete',
       selected: [expect.objectContaining({ name: 'release-notes' })],
       uncoveredCapabilities: [],
+    });
+    const suitePath = join(root, 'retrieval-suite.json');
+    writeFileSync(
+      suitePath,
+      JSON.stringify({
+        name: 'cli-selection',
+        version: '1',
+        description: 'CLI retrieval evaluation fixture.',
+        cases: [
+          {
+            id: 'metadata-release',
+            query: 'assemble the delivery artifact',
+            expectedNames: ['release-notes'],
+            preferredTags: ['release'],
+          },
+        ],
+      }),
+    );
+    const evaluation = run(root, 'capability', 'evaluate', suitePath);
+    expect(evaluation.status).toBe(0);
+    expect(JSON.parse(evaluation.stdout)).toMatchObject({
+      status: 'passed',
+      baseline: { recallAtK: 0 },
+      candidate: { recallAtK: 1 },
     });
 
     const verification = run(root, 'skill', 'verify', installed.skillId);

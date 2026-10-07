@@ -2,7 +2,7 @@
 
 **Version:** 0.4
 **Reviewed:** 2026-10-07
-**Scope:** planned full system, with implemented Phase 1–3 and Phase 4 foundation controls called out explicitly
+**Scope:** planned full system, with implemented Phase 1–4 local controls called out explicitly
 
 ## 1. Security objectives
 
@@ -93,7 +93,7 @@
 
 **Controls:** scoped writes; immutable provenance; trust/confidence separate; candidate state; independent evidence; correction/tombstone; decay/expiry; retrieval origin shown; no automatic policy promotion; poisoning regression suite.
 
-**Phase 4 foundation:** only active canonical Skill versions synchronize into project-scoped index documents; full instruction bodies are excluded; ranking components and strategy versions are retained as evidence; raw query text is not persisted; and ranking cannot promote or authorize a capability. This does not replace authenticated promotion or behavioral poisoning evaluation.
+**Phase 4:** only active canonical Skill versions synchronize into project-scoped index documents; full instruction bodies are excluded; ranking components and strategy versions are retained as evidence; raw query text is not persisted; and ranking cannot promote or authorize a capability. Versioned evaluation compares against a pinned lexical ablation and stores append-only case evidence. This does not replace authenticated approval or adversarial poisoning evaluation.
 
 ### Malformed embeddings and retrieval resource exhaustion
 
@@ -119,6 +119,8 @@
 
 **Controls:** approval UI shows exact operation, diff, scope, source evidence, policy reason, uncertainty, and irreversible effects; explanation is labeled model-generated; high-risk actions require independent verification.
 
+**Phase 4 local control:** Skill promotion is denied unless immutable trust, license, structural, finding, and named behavioral-suite score gates pass. Decisions snapshot checks/evidence and exact prior state; rollback rejects replay and state divergence. The CLI actor remains an unauthenticated declaration and therefore is not a production human-approval service.
+
 ### Audit tampering
 
 **Path:** attacker updates/deletes traces, provenance, findings, or approvals.
@@ -141,11 +143,11 @@ Always blocked or approval-gated according to policy:
 
 ## 7. Implemented controls and gaps
 
-Implemented through the Phase 4 foundation: strict data-only config; symlink/size/unknown-key rejection; unsafe merge-key rejection; secret redaction; migration checksums and backup-aware upgrades; database integrity; local file modes; append-only event triggers; strict Agent Skills parsing; bounded directory, ZIP, HTTPS ZIP, and bare-Git adapters; public-address and destination-pinning controls; portable path-collision rejection; deterministic payload/file/source hashes; immutable Skill versions; provenance; static security/license/duplicate assessments; quarantine; inactive candidate registration; installed-artifact re-verification; project-scoped active capability indexing; validated bounded embedding storage; evidence-backed hybrid retrieval; dependency/conflict-aware bounded composition; query/intent hashing; and inert gap proposals.
+Implemented through Phase 4: strict data-only config; symlink/size/unknown-key rejection; unsafe merge-key rejection; secret redaction; migration checksums and backup-aware upgrades; database integrity; local file modes; append-only event triggers; strict Agent Skills parsing; bounded directory, ZIP, HTTPS ZIP, and bare-Git adapters; public-address and destination-pinning controls; portable path-collision rejection; deterministic payload/file/source hashes; immutable Skill versions; provenance; static security/license/duplicate assessments; quarantine; inactive candidate registration; installed-artifact re-verification; project-scoped active capability indexing; validated bounded embedding storage and provider conformance harness; evidence-backed hybrid retrieval; dependency/conflict-aware bounded composition; query/intent hashing; inert gap proposals; append-only retrieval regression evidence; fail-closed local promotion gates; and exact state-matched rollback.
 
 ZIP parsing and scanning still run in the CLI process, and local source trees can be exposed to concurrent mutation by another local process. Snapshotting, no-follow opens, inode/size/containment checks, post-copy hashes, process limits, and sampled Git staging limits reduce risk, but process, mount, syscall, and kernel-enforced storage isolation are required before hostile multi-user operation.
 
-Not implemented: authentication, authorization, execution sandbox, runtime network policy, specialized malware/dependency advisory engines, DLP certification, tenant isolation, signatures, SBOM, durable external audit, candidate promotion, or approval service. These are explicit blockers, not accepted residual production risks.
+Not implemented: authenticated identity, authorization, production approval service, execution sandbox, runtime network policy, specialized malware/dependency advisory engines, DLP certification, tenant isolation, signatures, SBOM, or durable external audit. Local candidate promotion requires explicit acknowledgement but is not authenticated approval. These are explicit blockers, not accepted residual production risks.
 
 ## 8. Verification plan
 

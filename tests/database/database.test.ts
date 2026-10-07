@@ -58,6 +58,9 @@ describe('SqliteDatabase', () => {
         'retrieval_runs',
         'composition_plans',
         'synthesis_proposals',
+        'retrieval_evaluation_runs',
+        'retrieval_evaluation_case_results',
+        'capability_promotion_decisions',
       ]),
     );
     await database.stop();
@@ -107,7 +110,7 @@ describe('SqliteDatabase', () => {
     await database.stop();
   });
 
-  it('upgrades schema v3 data through capability schema v6 without loss', async () => {
+  it('upgrades schema v3 data through capability schema v7 without loss', async () => {
     const path = databasePath();
     const raw = new BetterSqlite3(path);
     raw.exec(`CREATE TABLE schema_migrations (
@@ -162,8 +165,8 @@ describe('SqliteDatabase', () => {
 
     const database = new SqliteDatabase({ path, migrationMode: 'manual' });
     await database.start();
-    expect(database.migrationStatus().pending).toEqual([4, 5, 6]);
-    expect(database.applyMigrations().currentVersion).toBe(6);
+    expect(database.migrationStatus().pending).toEqual([4, 5, 6, 7]);
+    expect(database.applyMigrations().currentVersion).toBe(7);
     expect(
       database.connection.prepare('SELECT version, risk_level AS risk FROM skill_versions').all(),
     ).toEqual([{ version: '1.0.0', risk: 'safe' }]);

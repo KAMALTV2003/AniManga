@@ -754,4 +754,100 @@ CREATE INDEX synthesis_proposals_project_idx
   ON synthesis_proposals(project_id, status, created_at DESC);
 `,
   ),
+  migration(
+    7,
+    'capability_evaluation_promotion_rollback',
+    `
+CREATE TABLE retrieval_evaluation_runs (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE RESTRICT,
+  suite_name TEXT NOT NULL CHECK(length(suite_name) BETWEEN 1 AND 128),
+  suite_version TEXT NOT NULL CHECK(length(suite_version) BETWEEN 1 AND 64),
+  corpus_sha256 TEXT NOT NULL CHECK(length(corpus_sha256) = 64),
+  baseline_strategy TEXT NOT NULL,
+  candidate_strategy TEXT NOT NULL,
+  status TEXT NOT NULL CHECK(status IN ('passed','failed')),
+  case_count INTEGER NOT NULL CHECK(case_count BETWEEN 1 AND 1000),
+  baseline_metrics_json TEXT NOT NULL CHECK(json_valid(baseline_metrics_json)),
+  candidate_metrics_json TEXT NOT NULL CHECK(json_valid(candidate_metrics_json)),
+  delta_json TEXT NOT NULL CHECK(json_valid(delta_json)),
+  gate_json TEXT NOT NULL CHECK(json_valid(gate_json)),
+  environment_json TEXT NOT NULL CHECK(json_valid(environment_json)),
+  started_at TEXT NOT NULL,
+  completed_at TEXT NOT NULL
+) STRICT;
+CREATE INDEX retrieval_evaluation_runs_project_idx
+  ON retrieval_evaluation_runs(project_id, suite_name, suite_version, completed_at DESC);
+
+CREATE TABLE retrieval_evaluation_case_results (
+  id TEXT PRIMARY KEY,
+  run_id TEXT NOT NULL REFERENCES retrieval_evaluation_runs(id) ON DELETE CASCADE,
+  case_id TEXT NOT NULL,
+  query_sha256 TEXT NOT NULL CHECK(length(query_sha256) = 64),
+  expected_json TEXT NOT NULL CHECK(json_valid(expected_json)),
+  forbidden_json TEXT NOT NULL CHECK(json_valid(forbidden_json)),
+  baseline_retrieval_run_id TEXT NOT NULL REFERENCES retrieval_runs(id) ON DELETE RESTRICT,
+  candidate_retrieval_run_id TEXT NOT NULL REFERENCES retrieval_runs(id) ON DELETE RESTRICT,
+  baseline_results_json TEXT NOT NULL CHECK(json_valid(baseline_results_json)),
+  candidate_results_json TEXT NOT NULL CHECK(json_valid(candidate_results_json)),
+  baseline_reciprocal_rank REAL NOT NULL CHECK(baseline_reciprocal_rank BETWEEN 0 AND 1),
+  candidate_reciprocal_rank REAL NOT NULL CHECK(candidate_reciprocal_rank BETWEEN 0 AND 1),
+  candidate_forbidden_hits INTEGER NOT NULL CHECK(candidate_forbidden_hits >= 0),
+  created_at TEXT NOT NULL,
+  UNIQUE(run_id, case_id)
+) STRICT;
+CREATE INDEX retrieval_evaluation_cases_run_idx
+  ON retrieval_evaluation_case_results(run_id, case_id);
+
+CREATE TABLE capability_promotion_decisions (
+  id TEXT PRIMARY KEY,
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE RESTRICT,
+  skill_id TEXT NOT NULL REFERENCES skills(id) ON DELETE RESTRICT,
+  skill_version_id TEXT NOT NULL REFERENCES skill_versions(id) ON DELETE RESTRICT,
+  decision_type TEXT NOT NULL CHECK(decision_type IN ('promotion','rollback')),
+  outcome TEXT NOT NULL CHECK(outcome IN ('applied','denied')),
+  policy_version TEXT NOT NULL,
+  actor TEXT NOT NULL CHECK(length(actor) BETWEEN 1 AND 256),
+  reason TEXT NOT NULL CHECK(length(reason) BETWEEN 1 AND 2048),
+  previous_status TEXT NOT NULL CHECK(previous_status IN ('candidate','active','deprecated','archived','blocked')),
+  resulting_status TEXT NOT NULL CHECK(resulting_status IN ('candidate','active','deprecated','archived','blocked')),
+  previous_version_id TEXT REFERENCES skill_versions(id) ON DELETE RESTRICT,
+  resulting_version_id TEXT REFERENCES skill_versions(id) ON DELETE RESTRICT,
+  checks_json TEXT NOT NULL CHECK(json_valid(checks_json)),
+  evidence_json TEXT NOT NULL CHECK(json_valid(evidence_json)),
+  parent_decision_id TEXT REFERENCES capability_promotion_decisions(id) ON DELETE RESTRICT,
+  created_at TEXT NOT NULL
+) STRICT;
+CREATE INDEX capability_promotion_decisions_skill_idx
+  ON capability_promotion_decisions(project_id, skill_id, created_at DESC);
+CREATE UNIQUE INDEX capability_promotion_single_rollback_idx
+  ON capability_promotion_decisions(parent_decision_id)
+  WHERE decision_type = 'rollback' AND outcome = 'applied';
+
+CREATE TRIGGER retrieval_evaluation_runs_reject_update
+BEFORE UPDATE ON retrieval_evaluation_runs BEGIN
+  SELECT RAISE(ABORT, 'retrieval evaluation runs are append-only');
+END;
+CREATE TRIGGER retrieval_evaluation_runs_reject_delete
+BEFORE DELETE ON retrieval_evaluation_runs BEGIN
+  SELECT RAISE(ABORT, 'retrieval evaluation runs are append-only');
+END;
+CREATE TRIGGER retrieval_evaluation_cases_reject_update
+BEFORE UPDATE ON retrieval_evaluation_case_results BEGIN
+  SELECT RAISE(ABORT, 'retrieval evaluation case results are append-only');
+END;
+CREATE TRIGGER retrieval_evaluation_cases_reject_delete
+BEFORE DELETE ON retrieval_evaluation_case_results BEGIN
+  SELECT RAISE(ABORT, 'retrieval evaluation case results are append-only');
+END;
+CREATE TRIGGER capability_promotion_decisions_reject_update
+BEFORE UPDATE ON capability_promotion_decisions BEGIN
+  SELECT RAISE(ABORT, 'capability promotion decisions are append-only');
+END;
+CREATE TRIGGER capability_promotion_decisions_reject_delete
+BEFORE DELETE ON capability_promotion_decisions BEGIN
+  SELECT RAISE(ABORT, 'capability promotion decisions are append-only');
+END;
+`,
+  ),
 ]);

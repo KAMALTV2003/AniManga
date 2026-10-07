@@ -1,8 +1,12 @@
 import { Command } from 'commander';
 
 import {
+  checkSkillPromotion,
   composeCapabilities,
+  evaluateRetrieval,
+  promoteSkillVersion,
   proposeCapability,
+  rollbackSkillPromotion,
   searchCapabilities,
   syncCapabilities,
 } from './commands/capabilities.js';
@@ -62,6 +66,19 @@ function parseContextBytes(value: string): number {
     throw new RangeError('max-context-bytes must be an integer between 0 and 100000000');
   }
   return parsed;
+}
+
+function parseRequiredSuites(values: readonly string[]) {
+  if (values.length < 1 || values.length > 20) {
+    throw new RangeError('require-suite must contain between 1 and 20 name@version values');
+  }
+  return values.map((value) => {
+    const separator = value.lastIndexOf('@');
+    if (separator < 1 || separator === value.length - 1) {
+      throw new RangeError(`evaluation suite must use name@version: ${value}`);
+    }
+    return { name: value.slice(0, separator), version: value.slice(separator + 1) };
+  });
 }
 
 const HARVEST_SOURCE_TYPES = [
@@ -333,9 +350,167 @@ export function createProgram(
       },
     );
 
+  capability
+    .command('evaluate')
+    .description('run and persist a versioned retrieval suite against the lexical baseline')
+    .argument('<suite>', 'bounded JSON retrieval evaluation suite')
+    .action(async (suite: string, _options: unknown, command: Command) => {
+      const output = outputFor(command, io);
+      try {
+        const report = await evaluateRetrieval(process.cwd(), suite);
+        writeResult(output, report, () =>
+          [
+            `Retrieval evaluation: ${report.status.toUpperCase()}`,
+            `  Run: ${report.runId}`,
+            `  Suite: ${report.suiteName}@${report.suiteVersion}`,
+            `  Baseline recall@${report.topK}: ${report.baseline.recallAtK}`,
+            `  Candidate recall@${report.topK}: ${report.candidate.recallAtK}`,
+            `  Recall delta: ${report.delta.recallAtK}`,
+          ].join('\n'),
+        );
+        if (report.status === 'failed') process.exitCode = 2;
+      } catch (error) {
+        writeError(output, error);
+        process.exitCode = 1;
+      }
+    });
+
   const skill = program
     .command('skill')
     .description('analyze and manage inert, versioned Skill packages');
+
+  skill
+    .command('promotion-check')
+    .description('evaluate immutable trust and behavioral evidence without changing registry state')
+    .argument('<skill-id>', 'candidate Skill identity')
+    .requiredOption('--version <semver>', 'candidate semantic version')
+    .option('--require-suite <suite...>', 'required evaluation suite as name@version', [
+      'nexus.behavioral-skill@1',
+    ])
+    .action(
+      async (
+        skillId: string,
+        options: { version: string; requireSuite: string[] },
+        command: Command,
+      ) => {
+        const output = outputFor(command, io);
+        try {
+          const report = await checkSkillPromotion(
+            process.cwd(),
+            skillId,
+            options.version,
+            parseRequiredSuites(options.requireSuite),
+          );
+          writeResult(output, report, () =>
+            [
+              `Skill promotion check: ${report.eligible ? 'ELIGIBLE' : 'BLOCKED'}`,
+              ...report.checks.map(
+                (item) => `  [${item.passed ? 'PASS' : 'FAIL'}] ${item.id} — ${item.summary}`,
+              ),
+            ].join('\n'),
+          );
+          if (!report.eligible) process.exitCode = 2;
+        } catch (error) {
+          writeError(output, error);
+          process.exitCode = 1;
+        }
+      },
+    );
+
+  skill
+    .command('promote')
+    .description('apply an evidence-gated local candidate promotion and record an audit decision')
+    .argument('<skill-id>', 'candidate Skill identity')
+    .requiredOption('--version <semver>', 'candidate semantic version')
+    .requiredOption('--actor <identity>', 'local operator identity declaration')
+    .requiredOption('--reason <text>', 'promotion rationale')
+    .requiredOption(
+      '--acknowledge-local-operator',
+      'acknowledge that this local mode does not authenticate the declared actor',
+    )
+    .option('--require-suite <suite...>', 'required evaluation suite as name@version', [
+      'nexus.behavioral-skill@1',
+    ])
+    .action(
+      async (
+        skillId: string,
+        options: {
+          version: string;
+          actor: string;
+          reason: string;
+          acknowledgeLocalOperator: boolean;
+          requireSuite: string[];
+        },
+        command: Command,
+      ) => {
+        const output = outputFor(command, io);
+        try {
+          const report = await promoteSkillVersion(process.cwd(), skillId, options.version, {
+            actor: options.actor,
+            reason: options.reason,
+            acknowledgeLocalOperator: options.acknowledgeLocalOperator,
+            requiredSuites: parseRequiredSuites(options.requireSuite),
+          });
+          writeResult(output, report, () =>
+            [
+              `Skill promotion: ${report.outcome.toUpperCase()}`,
+              `  Decision: ${report.id}`,
+              `  Version: ${report.skillVersionId}`,
+              `  Graph synchronized: ${report.graphSynchronized ? 'yes' : 'no'}`,
+              ...report.checks
+                .filter((item) => !item.passed)
+                .map((item) => `  [FAIL] ${item.id} — ${item.summary}`),
+            ].join('\n'),
+          );
+          if (report.outcome === 'denied') process.exitCode = 2;
+        } catch (error) {
+          writeError(output, error);
+          process.exitCode = 1;
+        }
+      },
+    );
+
+  skill
+    .command('rollback-promotion')
+    .description('restore the exact registry state preceding an applied promotion')
+    .argument('<decision-id>', 'applied promotion decision ID')
+    .requiredOption('--actor <identity>', 'local operator identity declaration')
+    .requiredOption('--reason <text>', 'rollback rationale')
+    .requiredOption(
+      '--acknowledge-local-operator',
+      'acknowledge that this local mode does not authenticate the declared actor',
+    )
+    .action(
+      async (
+        decisionId: string,
+        options: {
+          actor: string;
+          reason: string;
+          acknowledgeLocalOperator: boolean;
+        },
+        command: Command,
+      ) => {
+        const output = outputFor(command, io);
+        try {
+          const report = await rollbackSkillPromotion(process.cwd(), decisionId, {
+            actor: options.actor,
+            reason: options.reason,
+            acknowledgeLocalOperator: options.acknowledgeLocalOperator,
+          });
+          writeResult(output, report, () =>
+            [
+              `Skill promotion rollback: ${report.outcome.toUpperCase()}`,
+              `  Decision: ${report.id}`,
+              `  Restored version: ${report.resultingVersionId ?? 'none'}`,
+              `  Restored status: ${report.resultingStatus}`,
+            ].join('\n'),
+          );
+        } catch (error) {
+          writeError(output, error);
+          process.exitCode = 1;
+        }
+      },
+    );
 
   skill
     .command('harvest')

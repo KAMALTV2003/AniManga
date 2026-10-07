@@ -1,7 +1,7 @@
-# Phase 4 Foundation Security Review
+# Phase 4 Security Review
 
 **Review date:** 2026-10-07
-**Scope:** `@nexus-ai/capabilities`, schema migration v6, capability CLI, retrieval benchmark
+**Scope:** `@nexus-ai/capabilities`, schema migrations v6–v7, capability/promotion CLI, retrieval and composition benchmark
 **Production approval:** Not granted
 
 ## Reviewed invariants
@@ -17,6 +17,13 @@
 - `bounded-exact` is scoped to the retrieved candidate set; no global-optimality claim is made.
 - Synthesis proposals require a persisted project-local incomplete plan and behaviors evidenced as uncovered.
 - Synthesis proposals contain contracts only; no Skill instructions, scripts, dependencies, or executable content are generated.
+- Retrieval evaluation suites are bounded, runtime-validated with unknown-key and enum rejection, opened without following symlinks, and identified by a canonical corpus hash.
+- Evaluation runs and per-case evidence are append-only; raw case queries are persisted only as SHA-256 fingerprints.
+- Promotion fails closed unless independently recorded exact-version assessment, scan, license, structural, normalized-finding, and required behavioral-evaluation gates pass.
+- Denied promotions do not mutate registry state; applied decisions snapshot the exact previous state and evidence identities.
+- Registry mutation, decision insertion, and derived-graph synchronization share one database transaction.
+- Rollback requires an unreplayed project-local applied decision and exact current-state match before restoring the prior status/version.
+- Promotion decisions are append-only. Local actor identity is explicitly unauthenticated, and audit text matching credential patterns is rejected.
 
 ## Threats addressed
 
@@ -48,18 +55,28 @@ SQLite FTS5 and JSON parsing still run in-process. Multi-tenant production use r
 
 Raw queries and synthesis intents can contain secrets, so only SHA-256 fingerprints are stored. Bounded retrieval results, filters, strategy versions, provider/model names, and durations remain available for audit. Hashes do not provide anonymity for low-entropy input, so access to the evidence database remains sensitive.
 
+### Promotion forgery, replay, and unsafe rollback
+
+A promotion decision snapshots each gate result and evidence ID in the same transaction that changes registry state. Missing behavioral suites, security criteria, license clearance, structural validation, or trust evidence deny the operation. Rollback is linked to one applied promotion, rejects replay, and refuses to overwrite diverged current state. Both decision types are append-only.
+
+The local CLI cannot authenticate the declared actor. Explicit acknowledgement prevents it from being mistaken for an authenticated approval service, but a process with database/filesystem access remains fully trusted. Production requires service identity, authorization, signed approvals, separation of duties, and an external append-only audit sink.
+
+### Evaluation overfitting
+
+The versioned corpus and strict baseline comparison expose regressions and prevent fabricated score claims, but the current corpus is synthetic. Structured metadata cases deliberately test information available to the hybrid strategy but disabled in the lexical ablation. The result demonstrates the implemented mechanism on that pinned corpus only. External, adversarial, multilingual, domain-specific, and real embedding-provider suites remain necessary.
+
 ## Residual risks and required gates
 
 - No authenticated principal or policy decision controls graph mutation or retrieval.
 - No calibrated production embedding provider or model-gateway isolation exists.
 - No ANN backend has passed conformance, tenant-isolation, recall, or performance tests.
-- Metadata poisoning remains possible after an operator marks locally authored content active.
-- Evaluation-gated promotion, human approval, signed decisions, and rollback are unfinished.
-- Corpus v1 is too small and synthetic to establish retrieval improvement.
-- Composition quality is bounded by retrieval recall and declared graph correctness.
+- Metadata poisoning remains possible if evaluation evidence or a locally declared operator is compromised.
+- Local evaluation-gated promotion and exact rollback exist, but authenticated approval, signed decisions, separation of duties, and external audit are unfinished.
+- Corpus v2 establishes improvement only on 24 synthetic cases; it is insufficient for general semantic or production-quality claims.
+- Composition quality is bounded by retrieval recall, declared graph correctness, and synthetic expected bundles.
 - SQLite remains a single-operator local control plane.
 - Selected capabilities cannot execute; sandbox, policy, approval, and egress controls remain mandatory.
 
 ## Conclusion
 
-The Phase 4 foundation is suitable for bounded local development and evaluation. It does not justify production, semantic-quality, global-optimality, safe-execution, or autonomous-promotion claims.
+Phase 4 is suitable for bounded local development, regression evaluation, and explicitly acknowledged local promotion/rollback. It does not justify production, authenticated approval, general semantic-quality, global-optimality, safe-execution, or autonomous-promotion claims.

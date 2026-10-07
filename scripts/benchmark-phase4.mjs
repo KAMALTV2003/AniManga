@@ -1,19 +1,30 @@
 import { readFile } from 'node:fs/promises';
 import { performance } from 'node:perf_hooks';
 
-import { CapabilityGraph, CapabilityRetriever } from '../packages/capabilities/dist/index.js';
+import {
+  CapabilityComposer,
+  CapabilityGraph,
+  RetrievalEvaluator,
+  parseRetrievalEvaluationSuite,
+} from '../packages/capabilities/dist/index.js';
 import { ProjectRepository, SqliteDatabase } from '../packages/database/dist/index.js';
 
 const requested = Number(process.argv[2] ?? 20);
 if (!Number.isInteger(requested) || requested < 1 || requested > 200) {
   throw new RangeError('Iterations must be an integer between 1 and 200');
 }
-const corpus = JSON.parse(
+const raw = JSON.parse(
   await readFile(
-    new URL('../tests/fixtures/phase4-retrieval-corpus-v1.json', import.meta.url),
+    new URL('../tests/fixtures/phase4-retrieval-corpus-v2.json', import.meta.url),
     'utf8',
   ),
 );
+const suite = parseRetrievalEvaluationSuite({
+  name: raw.name,
+  version: raw.version,
+  description: raw.description,
+  cases: raw.cases,
+});
 const database = new SqliteDatabase({ path: ':memory:' });
 await database.start();
 try {
@@ -24,8 +35,9 @@ try {
     rootPath: '/benchmark/phase4',
   });
   const graph = new CapabilityGraph(database);
-  for (const capability of corpus.capabilities) {
-    graph.register({
+  const byName = new Map();
+  for (const capability of raw.capabilities) {
+    const registered = graph.register({
       projectId,
       nodeType: 'skill',
       objectId: `benchmark_${capability.name}`,
@@ -34,92 +46,141 @@ try {
       description: capability.description,
       tags: capability.tags,
       capabilities: capability.behaviors,
-      contextBytes: Buffer.byteLength(capability.description, 'utf8'),
+      contextBytes: capability.contextBytes,
       risk: 'low',
     });
+    byName.set(capability.name, registered.node.id);
   }
-  const retriever = new CapabilityRetriever(database);
+  for (const capability of raw.capabilities) {
+    const sourceNodeId = byName.get(capability.name);
+    for (const dependency of capability.dependsOn ?? []) {
+      const targetNodeId = byName.get(dependency);
+      if (sourceNodeId === undefined || targetNodeId === undefined) {
+        throw new Error(`Corpus dependency is unresolved: ${capability.name} -> ${dependency}`);
+      }
+      graph.connect({ projectId, sourceNodeId, targetNodeId, edgeType: 'depends_on' });
+    }
+  }
+
+  const evaluator = new RetrievalEvaluator(database);
+  const composer = new CapabilityComposer(database);
   const warmups = 2;
   for (let iteration = 0; iteration < warmups; iteration += 1) {
-    await evaluate(retriever, projectId, corpus.cases, 'hybrid');
+    await evaluator.evaluate(projectId, suite);
+    await evaluateComposition(composer, projectId, raw.compositionCases);
   }
-  const measurements = { baseline: [], hybrid: [] };
-  let baselineMetrics;
-  let hybridMetrics;
+
+  const retrievalLatencies = [];
+  const retrievalResults = [];
+  const compositionLatencies = [];
+  let retrievalResult;
+  let compositionResult;
   for (let iteration = 0; iteration < requested; iteration += 1) {
-    const baselineStart = performance.now();
-    baselineMetrics = await evaluate(retriever, projectId, corpus.cases, 'baseline');
-    measurements.baseline.push(performance.now() - baselineStart);
-    const hybridStart = performance.now();
-    hybridMetrics = await evaluate(retriever, projectId, corpus.cases, 'hybrid');
-    measurements.hybrid.push(performance.now() - hybridStart);
+    const retrievalStarted = performance.now();
+    retrievalResult = await evaluator.evaluate(projectId, suite);
+    retrievalResults.push(retrievalResult);
+    retrievalLatencies.push(performance.now() - retrievalStarted);
+    const compositionStarted = performance.now();
+    compositionResult = await evaluateComposition(composer, projectId, raw.compositionCases);
+    compositionLatencies.push(performance.now() - compositionStarted);
   }
-  console.log(
-    JSON.stringify(
-      {
-        benchmark: corpus.name,
-        corpusVersion: corpus.version,
-        corpusLicense: corpus.license,
-        corpusKind: 'synthetic deterministic capability-selection corpus',
-        node: process.version,
-        platform: process.platform,
-        architecture: process.arch,
-        iterations: requested,
-        warmups,
-        capabilities: corpus.capabilities.length,
-        cases: corpus.cases.length,
-        semanticEmbeddingsUsed: false,
-        baseline: {
-          strategy: 'FTS5 lexical only',
-          ...baselineMetrics,
-          latencyMsPerCorpus: summarize(measurements.baseline),
-        },
-        phase4Foundation: {
-          strategy: 'FTS5 lexical + metadata RRF',
-          ...hybridMetrics,
-          latencyMsPerCorpus: summarize(measurements.hybrid),
-        },
-      },
-      null,
-      2,
-    ),
-  );
+  const report = {
+    benchmark: suite.name,
+    corpusVersion: suite.version,
+    corpusLicense: raw.license,
+    corpusKind: 'synthetic deterministic software-capability selection regression suite',
+    node: process.version,
+    platform: process.platform,
+    architecture: process.arch,
+    iterations: requested,
+    warmups,
+    capabilities: raw.capabilities.length,
+    retrievalCases: suite.cases.length,
+    compositionCases: raw.compositionCases.length,
+    semanticEmbeddingsUsed: false,
+    retrievalGate: {
+      status: retrievalResults.every((result) => result.status === 'passed') ? 'passed' : 'failed',
+      baseline: aggregateRetrievalMetrics(retrievalResults, 'baseline'),
+      candidate: aggregateRetrievalMetrics(retrievalResults, 'candidate'),
+      delta: retrievalResult.delta,
+      fullSuiteLatencyMs: summarize(retrievalLatencies),
+    },
+    composition: {
+      ...compositionResult,
+      fullSuiteLatencyMs: summarize(compositionLatencies),
+    },
+  };
+  console.log(JSON.stringify(report, null, 2));
+  if (report.retrievalGate.status !== 'passed') {
+    throw new Error('Phase 4 retrieval gate failed');
+  }
+  if (compositionResult.completionRate !== 1 || compositionResult.exactBundleRate !== 1) {
+    throw new Error('Phase 4 composition gate failed');
+  }
 } finally {
   await database.stop();
 }
 
-async function evaluate(retriever, projectId, cases, mode) {
-  let reciprocalRank = 0;
-  let top1 = 0;
+async function evaluateComposition(composer, projectId, cases) {
+  let completed = 0;
+  let exactBundles = 0;
+  let totalContextBytes = 0;
   for (const testCase of cases) {
-    const response = await retriever.retrieve({
+    const result = await composer.compose({
       projectId,
       query: testCase.query,
-      limit: 5,
-      ...(mode === 'baseline'
-        ? { weights: { lexical: 1, semantic: 0, metadata: 0, graph: 0 } }
-        : { preferredTags: testCase.preferredTags }),
+      requiredCapabilities: testCase.requiredCapabilities,
+      maxContextBytes: testCase.maxContextBytes,
+      retrievalLimit: 20,
     });
-    const rank = response.results.findIndex((item) => item.name === testCase.expected) + 1;
-    if (rank === 1) top1 += 1;
-    if (rank > 0) reciprocalRank += 1 / rank;
+    if (result.status === 'complete') completed += 1;
+    const actual = result.selected.map((item) => item.name).sort();
+    const expected = [...testCase.expectedNames].sort();
+    if (JSON.stringify(actual) === JSON.stringify(expected)) exactBundles += 1;
+    totalContextBytes += result.contextBytes;
   }
   return {
-    recallAt1: top1 / cases.length,
-    meanReciprocalRankAt5: reciprocalRank / cases.length,
+    completionRate: completed / cases.length,
+    exactBundleRate: exactBundles / cases.length,
+    meanContextBytes: Number((totalContextBytes / cases.length).toFixed(2)),
+  };
+}
+
+function aggregateRetrievalMetrics(results, strategy) {
+  const latest = results.at(-1)[strategy];
+  const medianLatencies = results
+    .map((result) => result[strategy].medianLatencyMs)
+    .sort((left, right) => left - right);
+  const p95Latencies = results
+    .map((result) => result[strategy].p95LatencyMs)
+    .sort((left, right) => left - right);
+  return {
+    recallAtK: latest.recallAtK,
+    meanReciprocalRankAtK: latest.meanReciprocalRankAtK,
+    forbiddenHitRate: latest.forbiddenHitRate,
+    medianLatencyMs: precise(percentile(medianLatencies, 0.5)),
+    p95LatencyMs: precise(percentile(p95Latencies, 0.95)),
   };
 }
 
 function summarize(values) {
   const sorted = [...values].sort((left, right) => left - right);
   return {
-    median: percentile(sorted, 0.5),
-    p95: percentile(sorted, 0.95),
-    min: Number(sorted[0].toFixed(2)),
-    max: Number(sorted.at(-1).toFixed(2)),
+    median: rounded(percentile(sorted, 0.5)),
+    p95: rounded(percentile(sorted, 0.95)),
+    min: rounded(sorted[0]),
+    max: rounded(sorted.at(-1)),
   };
 }
 
 function percentile(sorted, quantile) {
-  return Number(sorted[Math.ceil(quantile * sorted.length) - 1].toFixed(2));
+  return sorted[Math.ceil(quantile * sorted.length) - 1];
+}
+
+function rounded(value) {
+  return Number(value.toFixed(2));
+}
+
+function precise(value) {
+  return Number(value.toFixed(6));
 }

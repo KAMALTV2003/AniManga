@@ -1,6 +1,6 @@
 # NEXUS Evaluation Methodology
 
-**Status:** methodology baseline; Phases 1–3 and the Phase 4 foundation have software tests, but no model benchmark results.
+**Status:** methodology baseline; Phases 1–4 have deterministic software and local selection-regression tests, but no model benchmark results.
 
 ## Principles
 
@@ -93,6 +93,6 @@ Critical cases have binary fail-closed assertions in addition to quality scoring
 
 ## Current evidence
 
-Verification through the Phase 4 foundation covers deterministic software behavior: compiler, lint, migrations/integrity, redaction, inert harvesting, static trust evidence, capability graph isolation, vector validation, hybrid ranking, bounded composition, and CLI end-to-end execution.
+Verification through Phase 4 covers deterministic software behavior: compiler, lint, migrations/integrity, redaction, inert harvesting, static trust evidence, capability graph isolation, vector validation, hybrid ranking, bounded composition, and CLI end-to-end execution.
 
-The Phase 4 corpus v1 is a six-case synthetic sanity set. Lexical-only and lexical-plus-metadata both currently score recall@1 `1.0` and MRR@5 `1.0`; this is parity, not measured improvement. No AI model, behavioral Skill-quality, model-routing, orchestration, or production semantic-retrieval score exists yet.
+The Phase 4 corpus v2 is a 24-case synthetic software-capability selection suite with six composition cases. Against the pinned lexical-only ablation, hybrid lexical-plus-structured-metadata retrieval scores recall@5 `1.0` versus `0.583333` and MRR@5 `0.909722` versus `0.562500`; all six expected composition bundles are selected exactly. These are reproducible local regression results for the disclosed synthetic corpus, not general semantic-quality results. No external embedding-provider, AI model, behavioral Skill execution, model-routing, orchestration, or production retrieval score exists yet.

@@ -60,7 +60,7 @@ Exit evidence is recorded in [PROJECT-STATUS.md](PROJECT-STATUS.md).
 
 ## Phase 4 — Synthesis, graph, and retrieval
 
-**Status: in progress.** The verified foundation includes the typed graph, active-Skill synchronization, hybrid retrieval contract, validated local exact-vector backend, bounded composer, evidence persistence, inert gap proposals, CLI, and a small sanity corpus. Promotion/rollback and the measured-improvement exit gate remain open.
+**Status: implemented and verified locally within the documented inert/single-operator boundary.** The typed graph, active-Skill synchronization, hybrid retrieval contract, validated exact-vector backend, provider conformance harness, bounded composer, inert gap proposals, append-only regression evaluation, local evidence-gated promotion, exact rollback, and CLI are implemented. Corpus v2 passes the pinned local improvement gate. External semantic-provider quality and authenticated production approval are not claimed.
 
 - typed capability graph API;
 - hybrid lexical/semantic/metadata/graph retrieval;

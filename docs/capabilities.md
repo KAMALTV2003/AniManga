@@ -1,6 +1,6 @@
 # Capability Graph, Retrieval, and Composition
 
-**Status:** Phase 4 foundation. This is tested local infrastructure, not completion of Phase 4 and not a production semantic retrieval claim.
+**Status:** Phase 4 implemented and verified within the documented local, inert boundary. This is not a production semantic-retrieval, authenticated promotion, or safe-execution claim.
 
 ## Trust boundary
 
@@ -46,6 +46,8 @@ Bounds:
 
 Vectors are accepted only when their count, dimensions, values, and norm validate. Non-finite, zero-norm, over-range, stale, and malformed vectors fail explicitly. The SQLite exact-cosine backend is a bounded local baseline, not an ANN scalability claim.
 
+`runEmbeddingProviderConformance` exercises batch cardinality, declared dimensions, finite/non-zero vectors, multilingual input, repeat determinism, and a caller-configured latency bound. It does not certify provider privacy, availability, model quality, billing, or credentials. No external provider result is claimed in this repository.
+
 Raw retrieval queries are not persisted. Runs retain a SHA-256 query fingerprint, strategy version, provider/model identity when used, effective weights, filters, bounded results, candidate count, and measured duration.
 
 ## Composition
@@ -71,7 +73,35 @@ A synthesis proposal is an inert contract for a measured composition gap. Creati
 - explicit acceptance criteria;
 - optional prohibited behaviors.
 
-Only intent SHA-256 is persisted, not raw intent. Proposals start as `draft`; this milestone generates no instructions, scripts, executable content, or active Skill. Evaluation-gated promotion and rollback remain unfinished Phase 4 work.
+Only intent SHA-256 is persisted, not raw intent. Proposals start as `draft`; this phase generates no instructions, scripts, executable content, or active Skill. Future model-assisted synthesis must create a separately harvested candidate and cannot bypass the trust gate.
+
+## Retrieval evaluation
+
+Versioned JSON suites define bounded queries, expected and forbidden capability names, optional structured tags, graph anchors, type filters, and risk filters. The CLI uses a no-follow file handle, enforces a 1 MB file bound, and detects size changes during reads; parsing rejects unknown keys and unsupported enum values. `RetrievalEvaluator` runs the same cases against:
+
+1. a pinned `fts5-lexical-only-v1` ablation; and
+2. the candidate hybrid strategy.
+
+The gate measures recall@K, MRR@K, forbidden-result rate, median latency, and p95 latency. Default policy requires minimum recall/MRR, no recall or MRR regression, no forbidden hit, and strict improvement in recall or MRR. Runs and per-case results are append-only. Raw queries are represented only by SHA-256; corpus identity, expected labels, ranked names, strategy versions, gate configuration, and environment are retained.
+
+A passing synthetic suite is regression evidence for that corpus, not a universal retrieval-quality or semantic-understanding claim.
+
+## Evaluation-gated Skill promotion and rollback
+
+`SkillPromotionService` evaluates immutable evidence for an initial candidate or a candidate version of an active Skill. The default local policy requires:
+
+- an unpromoted target version with a candidate harvest assessment;
+- completed low-or-safer static scan and version risk;
+- no unresolved license review;
+- a passing structural validation;
+- no unresolved high, critical, or blocked finding;
+- `nexus.behavioral-skill@1` with aggregate score at least `0.8` and security score at least `0.9`.
+
+Missing evidence denies promotion and persists the denied decision without changing registry state. A successful decision atomically records the previous state, promotes the exact immutable version, and synchronizes the derived graph in the same database transaction. Rollback is tied to one applied promotion, requires the current state to still match that decision, restores the exact previous status/version, synchronizes the graph transactionally, and cannot be replayed.
+
+Promotion and rollback decisions are append-only and retain check snapshots, evidence IDs, and a policy-configuration fingerprint appended to the declared policy version. Local CLI actor names are declarations, not authenticated identities; `--acknowledge-local-operator` makes that limitation explicit. Audit text that matches credential-redaction patterns is rejected. Team deployment still requires authenticated principals, authorization, approval policy, and external durable audit.
+
+Promotion does not execute a Skill or establish behavioral safety beyond the supplied evaluation evidence.
 
 ## CLI
 
@@ -87,12 +117,34 @@ nexus capability propose "publish reviewed output" \
   --require publish \
   --accept "reject unreviewed output" \
   --prohibit "do not execute imported content"
+nexus capability evaluate ./retrieval-suite.json
+nexus skill promotion-check <skill-id> --version 1.0.0
+nexus skill promote <skill-id> --version 1.0.0 \
+  --actor local-operator \
+  --reason "behavioral and security gates passed" \
+  --acknowledge-local-operator
+nexus skill rollback-promotion <decision-id> \
+  --actor local-operator \
+  --reason "regression detected" \
+  --acknowledge-local-operator
 ```
 
-The CLI synchronizes active Skills before search, composition, or proposal creation. An incomplete composition exits with code `2`; operational or validation failures exit with code `1`.
+The CLI synchronizes active Skills before search, composition, proposal creation, or evaluation. An incomplete composition, failed evaluation gate, blocked promotion check, or denied promotion exits with code `2`; operational or validation failures exit with code `1`.
 
 ## Current benchmark evidence
 
-`npm run benchmark:phase4 -- 20` runs corpus version 1 from `tests/fixtures/phase4-retrieval-corpus-v1.json`. It is a six-case synthetic deterministic software-selection corpus under CC0-1.0, not an external benchmark and not an AI model evaluation. Semantic embeddings are disabled in this baseline.
+`npm run benchmark:phase4 -- 10` runs corpus version 2 from `tests/fixtures/phase4-retrieval-corpus-v2.json`: 18 capabilities, 24 retrieval cases, and six composition cases. It is a synthetic deterministic software-selection regression corpus under CC0-1.0, not an external benchmark and not an AI model evaluation. Twelve cases intentionally test structured metadata with wording different from indexed descriptions, and six cases include explicit forbidden-capability constraints. The lexical ablation does not consume structured metadata; the hybrid candidate does. Semantic embeddings are disabled.
 
-On the recorded Linux x64 / Node v22.22.3 run, lexical-only and lexical-plus-metadata both achieved recall@1 `1.0` and MRR@5 `1.0`. This demonstrates parity on a small sanity corpus, not superiority. The Phase 4 exit criterion—measured improvement on a larger versioned evaluation corpus without unacceptable regressions—has not yet been met.
+Recorded Linux x64 / Node v22.22.3 results:
+
+| Measure                    | Lexical baseline | Hybrid candidate |     Delta |
+| -------------------------- | ---------------: | ---------------: | --------: |
+| Recall@5                   |         0.583333 |         1.000000 | +0.416667 |
+| MRR@5                      |         0.562500 |         0.909722 | +0.347222 |
+| Cases with a forbidden hit |         0.000000 |         0.000000 |  0.000000 |
+| Median per-case retrieval  |         0.567 ms |         0.595 ms |           |
+| p95 per-case retrieval     |         1.987 ms |         1.614 ms |           |
+
+Composition completed all six cases, selected the exact expected bundles in all six, and used 288.33 mean context bytes. Median full 24-case retrieval-suite time was 31.18 ms; median full six-case composition-suite time was 8.36 ms across 10 measured iterations after two warmups. Reported per-case medians are the median of iteration medians; reported p95 values are the p95 of iteration p95s.
+
+This meets the Phase 4 local exit gate on the pinned synthetic corpus. It does not prove general semantic quality, external-provider quality, adversarial robustness, or production scalability.

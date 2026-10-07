@@ -1,6 +1,6 @@
 # NEXUS AI
 
-> **Current maturity: Phase 4 capability-selection foundation (`0.1.0-dev.1`).** Phases 1–3 are complete; Phase 4 remains in progress. NEXUS is under active development and must not be represented as production-ready.
+> **Current maturity: Phase 4 capability selection (`0.1.0-dev.1`).** Phases 1–4 are implemented and verified within documented local/inert boundaries. NEXUS is under active development and must not be represented as production-ready.
 
 NEXUS AI is a capability operating system for AI agents. Its goal is to discover, verify, compose, execute, evaluate, and continuously improve reusable capabilities without trusting arbitrary code or loading an entire capability catalog into model context.
 
@@ -10,7 +10,7 @@ The product thesis is:
 
 ## What is implemented now
 
-Phases 1–3 and the first verified Phase 4 milestone provide tested infrastructure, an inert canonical Skill registry, bounded harvesting/trust, and evidence-backed capability selection rather than simulated agent behavior:
+Phases 1–4 provide tested infrastructure, an inert canonical Skill registry, bounded harvesting/trust, and evidence-backed capability selection rather than simulated agent behavior:
 
 - TypeScript monorepo with strict compiler settings and explicit package boundaries.
 - Core lifecycle runtime with ordered startup, rollback, health aggregation, and structured failures.
@@ -25,10 +25,12 @@ Phases 1–3 and the first verified Phase 4 milestone provide tested infrastruct
 - Project-scoped typed capability graph with immutable index documents and active-Skill synchronization.
 - Bounded hybrid lexical/optional-semantic/metadata/graph retrieval with validated embedding-provider contracts and evidence persistence.
 - Dependency- and conflict-aware smallest-sufficient bundle composition plus inert synthesis contracts for measured gaps.
-- CLI commands for initialization, migration, diagnostics, status, validation, Skill lifecycle, and capability synchronization/search/composition/proposals, all with `--json` output.
+- Versioned append-only retrieval evaluation against a pinned baseline, with measured local improvement on the disclosed synthetic corpus.
+- Fail-closed local Skill promotion gates and exact, state-matched rollback with append-only evidence decisions.
+- CLI commands for initialization, migration, diagnostics, status, validation, Skill lifecycle, capability selection/evaluation, and local promotion/rollback, all with `--json` output.
 - Unit, integration, database, malicious-archive, hostile-harvest, security-behavior, and CLI end-to-end tests.
 
-Sandboxed Skill execution and behavioral evaluation, plus the agent runtime, model gateway, MCP gateway, dashboard, and exporters, remain roadmap work and are clearly marked in [PROJECT-STATUS.md](docs/PROJECT-STATUS.md).
+Sandboxed Skill execution and a behavioral evaluation runner, plus the agent runtime, model gateway, MCP gateway, dashboard, and exporters, remain roadmap work and are clearly marked in [PROJECT-STATUS.md](docs/PROJECT-STATUS.md).
 
 ## Requirements
 
@@ -59,6 +61,8 @@ npm run nexus -- skill search "my capability" --json
 npm run nexus -- capability sync --json
 npm run nexus -- capability search "secure release" --tag security release --json
 npm run nexus -- capability compose "prepare a secure release" --require release security-review --json
+npm run nexus -- capability evaluate ./retrieval-suite.json --json
+npm run nexus -- skill promotion-check <skill-id> --version 1.0.0 --json
 ```
 
 Initialize a different existing directory:
@@ -117,7 +121,7 @@ This means:
 - [Harvesting and trust](docs/harvesting.md)
 - [Capability graph, retrieval, and composition](docs/capabilities.md)
 - [Phase 3 security review](docs/security-review-phase3.md)
-- [Phase 4 foundation security review](docs/security-review-phase4-foundation.md)
+- [Phase 4 security review](docs/security-review-phase4-foundation.md)
 - [Implementation roadmap](docs/implementation-roadmap.md)
 - [Competitive research](docs/research/competitive-analysis.md)
 - [Threat model](docs/threat-model.md)
